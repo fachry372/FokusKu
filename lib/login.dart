@@ -48,6 +48,7 @@ class LoginScreen extends StatelessWidget {
               
               hintText: "Masukkan Email Anda",
               border: OutlineInputBorder(
+                
                 borderRadius: BorderRadius.all(Radius.circular(15)),
               )
             ),
