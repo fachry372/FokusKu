@@ -75,6 +75,7 @@ class LoginScreen extends StatelessWidget {
               
               hintText: "Masukkan Password Anda",
               border: OutlineInputBorder(
+                
                 borderRadius: BorderRadius.all(Radius.circular(15)),
               )
             ),
