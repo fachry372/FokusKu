@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fokusku/home.dart';
+import 'package:fokusku/halaman/navbar.dart';
 import 'package:fokusku/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,7 +20,7 @@ class AuthGate extends StatelessWidget {
          }
          final session = snapshot.hasData ? snapshot.data!.session : null;
          if (session != null) {
-          return const Home();    
+          return const Navbar();    
          } else {
           return const LoginScreen();
          }

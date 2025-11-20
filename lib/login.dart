@@ -27,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
 void login() async {
+  
   if (!mounted) return;
 
   setState(() => isLoading = true);
@@ -52,9 +53,10 @@ void login() async {
     errorMessage = "Terjadi kesalahan, coba lagi nanti.";
   }
 
+  ScaffoldMessenger.of(context).clearSnackBars();
 
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(errorMessage)));
+        .showSnackBar(SnackBar(content: Text(errorMessage),));
   } finally {
     if (mounted) {
       setState(() => isLoading = false);

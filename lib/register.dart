@@ -22,8 +22,7 @@ class _RegisterScreenState extends State<Register> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _konfirmasipasswordController = TextEditingController();
-
-  
+ 
 
     void signUp() async {
       if (!mounted) return;
@@ -56,12 +55,16 @@ class _RegisterScreenState extends State<Register> {
 
   if (e.toString().contains("User already registered")) {
     errorMessage = "Pendaftaran gagal ,Akun sudah ada.";
-  } else {
+  } else  if (e.toString().contains("Unable to validate email address")) {
+    errorMessage = "Format Email tidak valid .";
+  }
+  else {
     errorMessage = "Terjadi kesalahan, coba lagi nanti.";
   }
 
+        ScaffoldMessenger.of(context).clearSnackBars();
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage),));
        
     }finally{
       if (mounted) {
@@ -161,11 +164,14 @@ class _RegisterScreenState extends State<Register> {
               cursorColor: Color.fromARGB(255, 68, 161, 68),
 
                validator: (value) {
-                if (value == null || value.isEmpty) {
+
+                final text = value ?? "";
+
+                if (text.trim().isEmpty) {
           return "Username tidak boleh kosong";
                 }
                 
-                if (value.length > 20) {
+                if (text.length > 20) {
           return "Username maksimal 20 karakter";
                 }
                 return null;

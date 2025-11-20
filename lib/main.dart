@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/auth/auth_gate.dart';
-import 'package:fokusku/home.dart';
+import 'package:fokusku/halaman/navbar.dart';
 import 'package:fokusku/kirimlink.dart';
 import 'package:fokusku/register.dart';
 import 'package:fokusku/resetpassword.dart';
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/Daftar': (context) => Register(),
         '/Masuk' : (context) => LoginScreen(),
         '/reset' : (context) => Resetpassword(),
-        '/home' : (context) => Home(),
+        '/home' : (context) => Navbar(),
         '/kirim' : (context) => Kirimlink(),
       },
       home: AuthGate() ,
