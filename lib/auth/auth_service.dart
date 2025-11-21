@@ -8,7 +8,21 @@ class AuthService {
   }
 
    Future<AuthResponse> signUpWithEmailPassword(String name, String email, String password) async {
-    return await _supabase.auth.signUp(data: {'name' : name},email: email,password: password,);
+
+    final response = await _supabase.auth.signUp(email: email ,password: password);
+    final user = response.user;
+
+    if (user == null) {
+      throw Exception("Gagal membuat akun");
+    }
+
+    await _supabase.from('users').insert({
+      'id': user.id,
+      'nama': name,
+    });
+
+    return response;
+    
   }
 
 

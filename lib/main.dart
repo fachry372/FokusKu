@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'login.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
 
@@ -16,15 +17,36 @@ void main() async {
     url: "https://kfmsmdfarpckjnitsrmr.supabase.co",
   );
 
+   Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    final event = data.event;
+
+    if (event == AuthChangeEvent.passwordRecovery) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => const Resetpassword(),
+        ),
+      );
+    }
+  });
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+ 
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       routes: {
         '/Daftar': (context) => Register(),

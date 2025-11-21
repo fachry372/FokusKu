@@ -64,12 +64,12 @@ class _RegisterScreenState extends State<Register> {
 
         ScaffoldMessenger.of(context).clearSnackBars();
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage),));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text (errorMessage),));
        
     }finally{
       if (mounted) {
         setState(() => isLoading = false);
-      }
+      } 
     }
   }
   
