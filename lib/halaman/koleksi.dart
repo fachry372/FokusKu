@@ -9,10 +9,15 @@ class Koleksi extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xFFEAEFD9),
       appBar: AppBar(title: Center(child: Text("Koleksi")),),
-      body: SafeArea(child: Column(children: [
-
-      ],)),
-      
+      body: SafeArea(
+        child : SingleChildScrollView(
+        child: Column(
+          children: [
+          
+      ],
+      )
+      ),
+      )
     );
   }
 }

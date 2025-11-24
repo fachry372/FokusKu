@@ -52,7 +52,7 @@ void login() async {
   if (e.toString().contains("Invalid login credentials")) {
     errorMessage = "Login gagal ,Email atau kata sandi salah.";
   } else {
-    errorMessage = "Terjadi kesalahan, coba lagi nanti.";
+    errorMessage = "Terjadi kesalahan: $e";
   }
 
   ScaffoldMessenger.of(context).clearSnackBars();

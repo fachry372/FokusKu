@@ -35,11 +35,15 @@ class _AkunState extends State<Akun> {
         title: Center(child: Text("Akun"),),
          actions: [IconButton(onPressed: logout, icon: Icon(Icons.logout))],
       ),
-      body: SafeArea(child: Column(children:
-       [
+      body: SafeArea(
+        child : SingleChildScrollView(
+        child: Column(
+          children: [
 
-      ],)),
-      
+      ],
+      )
+      ),
+      )
     );
   }
 }

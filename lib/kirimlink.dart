@@ -88,7 +88,7 @@ class _KirimlinkState extends State<Kirimlink> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFEAEFD9),
-      body: SafeArea(
+      body: SingleChildScrollView(child:  SafeArea(
        child: Form(
         key: _formKey,
         child: Center(
@@ -107,7 +107,7 @@ class _KirimlinkState extends State<Kirimlink> {
           
              Padding(
                padding: const EdgeInsets.only(left: 41 ,right: 10),
-               child: Text("Lupa Kata Sandi ?", style:  GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold)),
+               child: Text("Lupa Kata Sandi?", style:  GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold)),
              ),
           
             const SizedBox(height: 5,),
@@ -117,8 +117,13 @@ class _KirimlinkState extends State<Kirimlink> {
             ),
           
             const SizedBox(height: 25,),
-          
-             
+                 
+            Padding(padding: EdgeInsetsGeometry.only(left: 41, right: 20),
+            child: Text("Email :",style: GoogleFonts.inter(fontSize: 18),),
+            ),
+
+            const SizedBox(height: 5,),
+
               Padding(padding: EdgeInsets.only(left: 41.0,right: 41.0),
               
               child: 
@@ -133,7 +138,7 @@ class _KirimlinkState extends State<Kirimlink> {
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Color(0xffffffff),
-                       hintText: "Masukkan Email Anda",
+                       
                          hintStyle: GoogleFonts.inter(color: Color.fromARGB(255, 165, 165, 165)),
                         border: OutlineInputBorder(
                           
@@ -223,6 +228,7 @@ class _KirimlinkState extends State<Kirimlink> {
        )
         
       ),
+      )
     );
   }
 }

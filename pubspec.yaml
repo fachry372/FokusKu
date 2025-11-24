@@ -38,6 +38,7 @@ dependencies:
   supabase_flutter: ^2.10.3
   app_links: ^6.4.1
   flutter_svg: ^2.2.2
+  provider: ^6.1.5+1
   
 
 dev_dependencies:

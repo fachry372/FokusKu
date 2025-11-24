@@ -57,12 +57,24 @@ class _ResetpasswordScreenState extends State<Resetpassword> {
 
   } catch (e) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text("Error: $e")));
-  } finally {
-    if (mounted) setState(() => isLoading = false);
+    String errorMessage;
+
+  if (e.toString().contains("New password should be different from the old password")) {
+    errorMessage = "Kata sandi baru tidak boleh sama dengan kata sandi lama.";
+  } else  {
+    errorMessage = "Terjadi kesalahan: $e";
   }
-}
+
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text (errorMessage),));
+
+  } finally {
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
+  }
+ }
 
 
  @override

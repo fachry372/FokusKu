@@ -5,6 +5,8 @@ import 'package:fokusku/kirimlink.dart';
 import 'package:fokusku/register.dart';
 import 'package:fokusku/resetpassword.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:fokusku/timer/timer.dart';
 
 import 'login.dart';
 
@@ -29,8 +31,15 @@ void main() async {
     }
   });
 
-  runApp(const MyApp());
+   runApp(
+    ChangeNotifierProvider(
+      create: (_) => TimerService(), // Provider TimerService
+      child: const MyApp(),
+    ),
+  );
 }
+
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

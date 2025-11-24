@@ -59,7 +59,7 @@ class _RegisterScreenState extends State<Register> {
     errorMessage = "Format Email tidak valid .";
   }
   else {
-    errorMessage = "Terjadi kesalahan, coba lagi nanti.";
+    errorMessage = "Terjadi kesalahan: $e";
   }
 
         ScaffoldMessenger.of(context).clearSnackBars();

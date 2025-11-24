@@ -3,6 +3,7 @@ import 'package:fokusku/halaman/akun.dart';
 import 'package:fokusku/halaman/home.dart';
 import 'package:fokusku/halaman/koleksi.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Navbar extends StatefulWidget {
   const Navbar({super.key});
@@ -16,8 +17,21 @@ class _NavbarState extends State<Navbar> {
 
   final List<Widget> halaman = const [Home(), Koleksi(), Akun()];
 
-  final Color selectedItemColor = Color(0xff316E33);
-  final Color unselectedItemColor = Color(0xffA5A8A5);
+  final Color selectedColor = Color(0xff316E33);
+  final Color unselectedColor = Color(0xffA5A8A5);
+
+   String _getlabel(int index) {
+            switch (index) {
+              case 0:
+              return "Home";
+              case 1:
+              return "Koleksi";
+              case 2:
+              return "Akun";
+              default:
+              return "";
+            }
+           }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +40,8 @@ class _NavbarState extends State<Navbar> {
 
       body: IndexedStack(index: _currentIndex, children: halaman),
       bottomNavigationBar: Container(
+        
+        
         decoration: BoxDecoration(
           color: Color(0xffffffff),
           borderRadius: BorderRadius.only(
@@ -35,58 +51,69 @@ class _NavbarState extends State<Navbar> {
           border: Border.all(color: Color(0xffACCD3D)),
         ),
 
-        child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          selectedItemColor: Color(0xff316E33),
-          unselectedItemColor: Color(0xffA5A8A5),
-          items: [
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                "assets/icons/home.svg",
-                colorFilter: ColorFilter.mode(
-                  _currentIndex == 0 ? selectedItemColor : unselectedItemColor,
-                  BlendMode.srcIn,
-                ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem("assets/icons/home.svg",0,33),
+            _navItem("assets/icons/koleksi.svg", 1, 33),
+            _navItem("assets/icons/akun.svg", 2, 32),
+          ]
 
-                height: 33,
-                width: 33,
-              ),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                "assets/icons/koleksi.svg",
-                colorFilter: ColorFilter.mode(
-                  _currentIndex == 1 ? selectedItemColor : unselectedItemColor,
-                  BlendMode.srcIn,
-                ),
-                height: 33,
-                width: 33,
-              ),
-              label: 'Koleksi',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                "assets/icons/akun.svg",
-                colorFilter: ColorFilter.mode(
-                  _currentIndex == 2 ? selectedItemColor : unselectedItemColor,
-                  BlendMode.srcIn,
-                ),
-                height: 28,
-                width: 28,
-              ),
-              label: 'Akun',
-            ),
-          ],
+          
+             
         ),
       ),
     );
   }
-}
+
+
+Widget _navItem(String asset , int index ,double size) {
+ bool selected = _currentIndex == index;
+
+ return Material(
+color: Colors.transparent,
+ child: InkResponse(
+ onTap: () {
+ setState(() {
+ _currentIndex = index;
+ });
+ },
+        
+ radius: 70, 
+ containedInkWell: true, 
+ highlightShape: BoxShape.circle, 
+borderRadius: BorderRadius.circular(10),
+splashColor: Color.fromARGB(255, 201, 207, 200),
+ child: Container(
+  width: 80,
+ 
+ padding: const EdgeInsets.symmetric(vertical: 6, ), 
+ child: Column(
+mainAxisSize: MainAxisSize.min,
+children: [ 
+ SvgPicture.asset(
+ asset,
+ height: size,
+ width: size,
+ colorFilter: ColorFilter.mode(
+ selected ? selectedColor : unselectedColor,
+ BlendMode.srcIn,
+ ),
+),
+ const SizedBox(height: 4,),
+ Text(
+ _getlabel(index),
+ style: GoogleFonts.inter(fontSize: 12,
+ color: selected ? selectedColor : unselectedColor,
+),
+),
+
+
+ ]
+ )
+ )
+ ),
+ );
+ }
+  } 
+
