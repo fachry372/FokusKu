@@ -1,15 +1,40 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+
+
 class TimerService extends ChangeNotifier {
   int _remainingSeconds = 0;
   Timer? _timer;
 
-  // Durasi fokus & break
-  int focusSeconds = 1500; // default 25 menit
-  int breakSeconds = 300;  // default 5 menit
+  int focusSeconds = 1500; 
+  int breakSeconds = 300;  
+  int longBreakSeconds = 900; 
+  int babak = 4; 
+
+  bool isFocus = true;
+
+  int step = 1;
 
   int get seconds => _remainingSeconds;
+
+  String get currentSessionLabel {
+  return isFocus ? "Waktu Fokus" : "Waktu Istirahat";
+}
+
+String get nextSessionLabel {
+  if (step < babak * 2 - 1) {
+    if (isFocus) {
+      return "Selanjutnya: Istirahat pendek";
+    } else {
+      return "Selanjutnya: Waktu fokus";
+    }
+  } else if (step == babak * 2 - 1) {
+    return "Selanjutnya: Istirahat panjang";
+  } else {
+    return "Selesai semua babak";
+  }
+}
 
   String get formattedTime {
     final m = _remainingSeconds ~/ 60;
@@ -17,37 +42,67 @@ class TimerService extends ChangeNotifier {
     return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
   }
 
-    // Format timer untuk Home: selalu durasi awal fokus
   String get initialFocusTime {
     final m = focusSeconds ~/ 60;
-    final s = focusSeconds % 60;
-    return "${m.toString().padLeft(2,'0')}:${s.toString().padLeft(2,'0')}";
+    return "${m.toString().padLeft(2,'0')}:00";
   }
 
-  /// START TIMER UTAMA
-  void startMainTimer() {
+
+
+  void startPomodoro() {
+    step = 1;
+    startNextStep();
+  }
+
+  void startNextStep() {
+   
+    if (step <= babak * 2 - 1) {
+      if (step % 2 == 1) {
+        startFocus();
+      } else {
+        startShortBreak();
+      }
+    } 
+    
+    else {
+      startLongBreak();
+    }
+  }
+
+  void startFocus() {
+    isFocus = true;
     start(
       seconds: focusSeconds,
       onFinished: () {
-        // ketika selesai → mulai break
-        startBreakTimer();
+        step++;
+        startNextStep();
       },
     );
   }
 
-  /// START TIMER BREAK
-  void startBreakTimer() {
+  void startShortBreak() {
+    isFocus = false;
     start(
       seconds: breakSeconds,
       onFinished: () {
-        // selesai break → bisa diisi logika lain
+        step++;
+        startNextStep();
       },
     );
   }
 
-  void start({int? seconds, VoidCallback? onFinished}) {
-    if (seconds != null) _remainingSeconds = seconds;
+  void startLongBreak() {
+    isFocus = false;
+    start(
+      seconds: longBreakSeconds,
+      onFinished: () {
+        stop();
+      },
+    ); 
+  }
 
+  void start({required int seconds, VoidCallback? onFinished}) {
+    _remainingSeconds = seconds;
     _timer?.cancel();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -59,6 +114,8 @@ class TimerService extends ChangeNotifier {
         if (onFinished != null) onFinished();
       }
     });
+
+    notifyListeners();
   }
 
   void stop() {
@@ -72,18 +129,21 @@ class TimerService extends ChangeNotifier {
     notifyListeners();
   }
 
- /// UPDATE DURASI FOKUS & BREAK
-void updateTimers({required int focusMinutes, required int breakMinutes}) {
-  // batasi maksimum 120 menit
-  focusMinutes = focusMinutes.clamp(1, 120);
-  breakMinutes = breakMinutes.clamp(1, 120);
+  
+  void updateTimers({
+    required int focusMinutes,
+    required int breakMinutes,
+    required int longBreakMinutes,
+    required int babakCount,
+  }) {
+    focusSeconds = focusMinutes * 60;
+    breakSeconds = breakMinutes * 60;
+    longBreakSeconds = longBreakMinutes * 60;
+    babak = babakCount;
 
-  focusSeconds = focusMinutes * 60;
-  breakSeconds = breakMinutes * 60;
+    reset();
+  }
 
-  // Reset timer utama ke durasi baru
-  reset();
-}
   @override
   void dispose() {
     _timer?.cancel();

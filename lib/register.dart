@@ -301,7 +301,7 @@ class _RegisterScreenState extends State<Register> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 43.0),
-              child: Text("Konfirmasi Kata sandi :",style: GoogleFonts.inter(fontSize: 18),textAlign: TextAlign.left,),
+              child: Text("Konfirmasi kata sandi :",style: GoogleFonts.inter(fontSize: 18),textAlign: TextAlign.left,),
             ),
             
           ),

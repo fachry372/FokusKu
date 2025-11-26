@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fokusku/timer/timer.dart'; // TimerService
+import 'package:fokusku/timer/timer.dart'; 
 import 'package:fokusku/halaman/sesifokus.dart';
 import 'package:fokusku/tamandantelur/tamantelur.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,13 +11,20 @@ class Home extends StatelessWidget {
   void _showTimerSettingsDialog(BuildContext context) {
     final timerService = Provider.of<TimerService>(context, listen: false);
 
-    // Konsisten: deklarasi controller hanya sekali
+    
     final TextEditingController focusController =
         TextEditingController(text: (timerService.focusSeconds ~/ 60).toString());
     final TextEditingController breakController =
         TextEditingController(text: (timerService.breakSeconds ~/ 60).toString());
+    final TextEditingController longBreakController =
+        TextEditingController(text: (timerService.longBreakSeconds ~/ 60).toString());
+    final TextEditingController babakController =
+        TextEditingController(text: timerService.babak.toString());
+
 
     final formKey = GlobalKey<FormState>();
+
+    
 
 showDialog(
   context: context,
@@ -25,28 +32,28 @@ showDialog(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(20),
     ),
-    backgroundColor: const Color(0xFFE6F2E6), // hijau muda
+    backgroundColor: const Color(0xFFE6F2E6), 
     contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
     title: Center(
       child: Text(
         "Atur Timer",
         style: GoogleFonts.inter(
           fontWeight: FontWeight.bold,
-          fontSize: 18, // lebih kecil
-          color: Colors.black, // default warna teks
+          fontSize: 18, 
+          color: Colors.black, 
         ),
       ),
     ),
-    content: Form(
+    content: SingleChildScrollView( child:  Form(
       key: formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Fokus Timer
+          
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Durasi fokus (menit):",
+              "Durasi fokus (menit) :",
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -79,12 +86,12 @@ showDialog(
               }
               final numVal = int.tryParse(value);
               if (numVal == null) return "Harus berupa angka";
-              if (numVal < 1 || numVal > 120) return "Durasi 1 hingga 120 menit";
+              if (numVal < 25 || numVal > 60) return "Durasi 25 hingga 60 menit.";
               return null;
             },
           ),
           const SizedBox(height: 15),
-          // Break Timer
+          
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -102,6 +109,7 @@ showDialog(
             keyboardType: TextInputType.number,
             cursorColor: const Color(0xFF52B755),
             style: GoogleFonts.inter(fontSize: 14),
+            enabled: false,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
@@ -121,12 +129,102 @@ showDialog(
               }
               final numVal = int.tryParse(value);
               if (numVal == null) return "Harus berupa angka";
-              if (numVal < 1 || numVal > 120) return "Durasi 1 hingga 120 menit";
+              if (numVal < 1 || numVal > 60) return "Durasi 5 menit.";
               return null;
             },
           ),
+          const SizedBox(height: 15),
+Align(
+  alignment: Alignment.centerLeft,
+  child: Text(
+    "Durasi istirahat panjang (menit):",
+    style: GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: Colors.black,
+    ),
+  ),
+),
+const SizedBox(height: 5),
+TextFormField(
+  controller: longBreakController,
+  keyboardType: TextInputType.number,
+  cursorColor: const Color(0xFF52B755),
+  style: GoogleFonts.inter(fontSize: 14),
+  
+  decoration: InputDecoration(
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 148, 150, 147)),
+      borderRadius: BorderRadius.circular(15),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 68, 161, 68)),
+      borderRadius: BorderRadius.circular(15),
+    ),
+    errorMaxLines: 2,
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return "Durasi istirahat panjang tidak boleh kosong";
+    }
+    final numVal = int.tryParse(value);
+    if (numVal == null) return "Harus berupa angka";
+    if (numVal < 15 || numVal > 30) return "Durasi 15 hingga 30 menit.";
+    return null;
+  },
+),
+const SizedBox(height: 15),
+Align(
+  alignment: Alignment.centerLeft,
+  child: Text(
+    "Jumlah babak :",
+    style: GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: Colors.black,
+    ),
+  ),
+),
+const SizedBox(height: 5),
+TextFormField(
+  controller: babakController,
+  keyboardType: TextInputType.number,
+  cursorColor: const Color(0xFF52B755),
+  style: GoogleFonts.inter(fontSize: 14),
+  decoration: InputDecoration(
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 148, 150, 147)),
+      borderRadius: BorderRadius.circular(15),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 68, 161, 68)),
+      borderRadius: BorderRadius.circular(15),
+    ),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return "Jumlah babak tidak boleh kosong";
+    }
+    final numVal = int.tryParse(value);
+    if (numVal == null) return "Harus berupa angka";
+    if (numVal < 1 || numVal > 4) return "Babak 1 hingga 4.";
+    return null;
+  },
+),
+      
         ],
       ),
+    ),
     ),
     actionsPadding: const EdgeInsets.only(bottom: 10, right: 10),
     actions: [
@@ -142,17 +240,24 @@ showDialog(
         ),
       ),
       ElevatedButton(
-        onPressed: () {
-          if (formKey.currentState!.validate()) {
-            int newFocus = int.parse(focusController.text);
-            int newBreak = int.parse(breakController.text);
-            timerService.updateTimers(
-              focusMinutes: newFocus,
-              breakMinutes: newBreak,
-            );
-            Navigator.pop(context); // tutup dialog utama
-          }
-        },
+  onPressed: () {
+    if (formKey.currentState!.validate()) {
+      int newFocus = int.parse(focusController.text);
+      int newBreak = int.parse(breakController.text);
+      int newLongBreak = int.parse(longBreakController.text);
+      int newRounds = int.parse(babakController.text);
+
+      timerService.updateTimers(
+        focusMinutes: newFocus,
+        breakMinutes: newBreak,
+        longBreakMinutes: newLongBreak,
+        babakCount: newRounds,
+      );
+
+      Navigator.pop(context);
+    }
+  },
+
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF52B755),
           shape: RoundedRectangleBorder(
@@ -191,14 +296,15 @@ showDialog(
                 Text(
                   "Mulai Fokus!",
                   style: GoogleFonts.inter(
-                    fontSize: 20,
+                    fontSize: 25,
                     color: Color(0xff182E19),
+                    
                   ),
                 ),
                 const SizedBox(height: 40),
                 const Center(child: Tamantelur()),
                 const SizedBox(height: 0),
-                // Tampilan timer fokus dan break
+              
                 GestureDetector(
                   onTap: () => _showTimerSettingsDialog(context),
                   child: Column(
@@ -207,7 +313,7 @@ showDialog(
                         timerService.initialFocusTime,
                         style: GoogleFonts.roboto(
                           fontSize: 70,
-                          fontWeight: FontWeight.w300,
+                          fontWeight: FontWeight.w400,
                           height: 0.8,
                         ),
                       ),
@@ -227,6 +333,7 @@ showDialog(
                 ElevatedButton(
                   onPressed: () {
                     timerService.reset();
+                    timerService.startPomodoro();
                     Navigator.push(
                       context,
                       MaterialPageRoute(

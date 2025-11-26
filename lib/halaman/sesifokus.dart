@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fokusku/tamandantelur/tamandantelurfokus.dart';
+import 'package:fokusku/tamandantelur/tamanteluristirahat.dart';
 import 'package:fokusku/timer/timer.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -21,12 +22,12 @@ class _SesifokusState extends State<Sesifokus> {
   void initState() {
     super.initState();
     timer = widget.timerService;
-    timer.startMainTimer(); // mulai timer fokus sesuai durasi di service
+    timer.startPomodoro(); 
   }
 
   @override
   void dispose() {
-    timer.stop(); // hentikan timer saat keluar halaman
+    timer.stop(); 
     super.dispose();
   }
 
@@ -37,7 +38,7 @@ class _SesifokusState extends State<Sesifokus> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.symmetric(horizontal: 21),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -51,17 +52,55 @@ class _SesifokusState extends State<Sesifokus> {
                     width: 33,
                   ),
                 ),
-                const SizedBox(height: 127),
+                const SizedBox(height: 66),
+
+               Center(
+                 child: AnimatedBuilder(
+                      animation: timer,
+                      builder: (_, __) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              timer.currentSessionLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 25,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xff182E19)
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              timer.nextSessionLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromARGB(255, 66, 71, 66)
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+               ),
+
+
+                const SizedBox(height: 40),
                 Center(
                   child: AnimatedBuilder(
-                    animation: timer,
-                    builder: (_, __) {
-                      return TamandantelurFokus(
-                        remainingseconds: timer.seconds,
-                        totalseconds: timer.focusSeconds,
-                      );
-                    },
-                  ),
+                      animation: timer,
+                      builder: (_, __) {
+                        return timer.isFocus
+                            ? TamandantelurFokus(
+                                remainingseconds: timer.seconds,
+                                totalseconds: timer.focusSeconds,
+                              )
+                            : 
+                            const TamanDanTelurIstirahat();
+                      },
+                    ),
+
+
                 ),
                 const SizedBox(height: 0),
                 Center(
@@ -72,8 +111,7 @@ class _SesifokusState extends State<Sesifokus> {
                         timer.formattedTime,
                         style: GoogleFonts.roboto(
                           fontSize: 70,
-                          fontWeight: FontWeight.w300,
-                          color: const Color(0xff182E19),
+                          fontWeight: FontWeight.w400,
                           height: 0.8,
                         ),
                       );

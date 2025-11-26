@@ -114,7 +114,7 @@ class _ResetpasswordScreenState extends State<Resetpassword> {
           ),
           
           const SizedBox(height: 42.0),
-          Text("Reset Kata Sandi",style: GoogleFonts.inter(fontSize: 32,fontWeight: FontWeight.bold),),
+          Text("Reset kata sandi",style: GoogleFonts.inter(fontSize: 32,fontWeight: FontWeight.bold),),
 
           const SizedBox(height: 42.0),
           
@@ -184,7 +184,7 @@ class _ResetpasswordScreenState extends State<Resetpassword> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 43.0),
-              child: Text("Konfirmasi Kata sandi :",style: GoogleFonts.inter(fontSize: 18),textAlign: TextAlign.left,),
+              child: Text("Konfirmasi kata sandi :",style: GoogleFonts.inter(fontSize: 18),textAlign: TextAlign.left,),
             ),
             
           ),
