@@ -11,12 +11,114 @@ class Sesifokus extends StatefulWidget {
 
   const Sesifokus({super.key, required this.timerService});
 
+  
+
   @override
   State<Sesifokus> createState() => _SesifokusState();
 }
 
 class _SesifokusState extends State<Sesifokus> {
   late TimerService timer;
+  bool rewardShown = false;
+
+
+  void showRewardDialog(BuildContext context, TimerService timer) {
+  int babak = (timer.step + 1) ~/ 2;
+
+  // Tentukan fase reward berdasarkan babak
+  int rewardPhase = timer.getMaxPhase(babak);
+
+  // Ambil gambar
+  String rewardImage = TamandantelurFokus(
+    remainingseconds: 0,
+    totalseconds: 1,
+    babak: babak,
+    timerService: timer,
+  ).pertumbuhanayam[rewardPhase];
+
+  showDialog(
+  context: context,
+  barrierDismissible: false,
+  builder: (context) => AlertDialog(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    backgroundColor: const Color(0xFFE6F2E6),
+    contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+
+    title: Center(
+      child: Text(
+        "Selamat!",
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.bold,
+          fontSize: 22,
+          color: Colors.black,
+        ),
+      ),
+    ),
+
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          "Kamu telah menyelesaikan Babak $babak",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // GAMBAR REWARD
+        Image.asset(
+          rewardImage,
+          width: 140,
+          height: 140,
+          fit: BoxFit.contain,
+        ),
+
+        const SizedBox(height: 20),
+      ],
+    ),
+
+    actionsPadding: const EdgeInsets.only(bottom: 10, right: 10, left: 10),
+
+    actions: [
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+
+            timer.tunggureward = false;
+            timer.step++;
+            timer.startNextStep();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF52B755),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: Text(
+            "Lanjut Istirahat",
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+
+}
+
 
   @override
   void initState() {
@@ -52,7 +154,7 @@ class _SesifokusState extends State<Sesifokus> {
                     width: 33,
                   ),
                 ),
-                const SizedBox(height: 66),
+                const SizedBox(height: 56),
 
                Center(
                  child: AnimatedBuilder(
@@ -61,23 +163,48 @@ class _SesifokusState extends State<Sesifokus> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
+                             Text(
                               timer.currentSessionLabel,
                               style: GoogleFonts.inter(
-                                fontSize: 25,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xff182E19)
+                                fontSize: 27,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xff182E19),
                               ),
                             ),
-                            const SizedBox(height: 4),
+
+                             const SizedBox(height: 6),
+
+                          
                             Text(
                               timer.nextSessionLabel,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
-                                color: Color.fromARGB(255, 66, 71, 66)
+                                color: const Color(0xff6A756A),
                               ),
                             ),
+
+                            const SizedBox(height: 6),
+
+                         
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xffDDE4C7),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "Babak ${(timer.step + 1) ~/ 2} / ${timer.babak}",
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xff4E574E),
+                                ),
+                              ),
+                            ),
+
+                           
+
                           ],
                         );
                       },
@@ -90,10 +217,23 @@ class _SesifokusState extends State<Sesifokus> {
                   child: AnimatedBuilder(
                       animation: timer,
                       builder: (_, __) {
+
+                         // CEK: waktunya habis + ini babak terakhir + belum ditampilkan sebelumnya
+                        if (timer.seconds == 0 && timer.isLastBabak && !rewardShown) {
+                          rewardShown = true;
+                          Future.microtask(() {
+                            if (!mounted) return;
+                             showRewardDialog(context, timer);
+                          });
+                        }
+
                         return timer.isFocus
                             ? TamandantelurFokus(
                                 remainingseconds: timer.seconds,
                                 totalseconds: timer.focusSeconds,
+                                babak: (timer.step + 1) ~/ 2,
+                                timerService: timer,
+                                
                               )
                             : 
                             const TamanDanTelurIstirahat();

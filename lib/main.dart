@@ -33,7 +33,7 @@ void main() async {
 
    runApp(
     ChangeNotifierProvider(
-      create: (_) => TimerService(), // Provider TimerService
+      create: (_) => TimerService(), 
       child: const MyApp(),
     ),
   );

@@ -86,7 +86,7 @@ showDialog(
               }
               final numVal = int.tryParse(value);
               if (numVal == null) return "Harus berupa angka";
-              if (numVal < 25 || numVal > 60) return "Durasi 25 hingga 60 menit.";
+              if (numVal < 1 || numVal > 60) return "Durasi 1 hingga 60 menit.";
               return null;
             },
           ),
@@ -129,7 +129,7 @@ showDialog(
               }
               final numVal = int.tryParse(value);
               if (numVal == null) return "Harus berupa angka";
-              if (numVal < 1 || numVal > 60) return "Durasi 5 menit.";
+              if (numVal < 1 || numVal > 5) return "Durasi 5 menit.";
               return null;
             },
           ),
@@ -292,43 +292,63 @@ TextFormField(
             padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Column(
               children: [
-                const SizedBox(height: 106),
+                const SizedBox(height: 86),
                 Text(
                   "Mulai Fokus!",
                   style: GoogleFonts.inter(
                     fontSize: 25,
                     color: Color(0xff182E19),
-                    
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 const Center(child: Tamantelur()),
                 const SizedBox(height: 0),
               
+              Container( 
+                height: 153 ,
+                width: 234,
+                decoration: BoxDecoration(
+                  color: Color(0xffE3E9CF),
+                  borderRadius: BorderRadius.circular(30),
+                  
+                ),
+                       
+                child: 
                 GestureDetector(
                   onTap: () => _showTimerSettingsDialog(context),
+                  
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         timerService.initialFocusTime,
-                        style: GoogleFonts.roboto(
+                        style: GoogleFonts.inter(
                           fontSize: 70,
                           fontWeight: FontWeight.w400,
                           height: 0.8,
+                          
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         "Istirahat: ${(timerService.breakSeconds ~/ 60).toString().padLeft(2, '0')}:00",
-                        style: GoogleFonts.roboto(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xff5E695E),
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w300,
+                          color: const Color.fromARGB(220, 49, 49, 49),
                         ),
                       ),
+                      const SizedBox(height: 5,),
+                      Text("Tap untuk ubah",
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w300,
+                        color: const Color.fromARGB(220, 49, 49, 49),
+                      ),)
                     ],
                   ),
                 ),
+              ),
                 const SizedBox(height: 25),
                 ElevatedButton(
                   onPressed: () {
@@ -355,7 +375,9 @@ TextFormField(
                       style: GoogleFonts.inter(
                         fontSize: 24,
                         color: Colors.white,
+                        
                       ),
+                      
                     ),
                   ),
                 ),

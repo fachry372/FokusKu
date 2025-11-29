@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:fokusku/timer/timer.dart';
 
 class TamandantelurFokus extends StatelessWidget {
+
+  final TimerService timerService;
+
+TamandantelurFokus({
+  super.key,
+  required this.remainingseconds,
+  required this.totalseconds,
+  required this.babak,
+  required this.timerService,
+});
+
   
   final int remainingseconds;
   final int totalseconds;
+  final int babak;
 
-   TamandantelurFokus ({
-    super.key,
-    required this.remainingseconds,
-    required this.totalseconds,
-  });
+  
+
+  
 
   final List<String> pertumbuhanayam = [
-    "assets/images/telur.png",
+    "assets/images/fase0.png",
     "assets/images/fase2.png",
     "assets/images/fase3.png",
     "assets/images/fase4.png",
@@ -39,10 +50,26 @@ class TamandantelurFokus extends StatelessWidget {
   ];
 
 
+
+
+
+int hitungFaseAyam(double progress, int babak) {
+  int min = timerService.getMinPhase(babak);
+  int max = timerService.getMaxPhase(babak);
+
+  int fase = (progress * (max - min )).round() + min;
+  return fase.clamp(min, max);
+}
+
+
+
+
   @override
   Widget build(BuildContext context) {
-    double proses = 1 - (remainingseconds / totalseconds);
-    int tahap = (proses * 6).clamp(0, 5).toInt();
+   double progress = (1 - (remainingseconds / totalseconds)).clamp(0.0, 0.9999);
+
+  int fase = hitungFaseAyam(progress, babak);
+
     return SizedBox(
                       height: 284.97,
                       width: 356,
@@ -52,18 +79,17 @@ class TamandantelurFokus extends StatelessWidget {
                         children: [
                           Positioned(child: Image.asset("assets/images/rumput.png",
                           fit: BoxFit.contain,
-                          
                           ),
                           
                           ),
                           Positioned(
-                            child: Transform.translate(offset: posisiGambar[tahap],
+                            child: Transform.translate(offset: posisiGambar[fase],
                             child: AnimatedSwitcher(duration: const Duration(milliseconds: 500),
-                            child: Image.asset(pertumbuhanayam[tahap],
-                            key: ValueKey<String>(pertumbuhanayam[tahap]),
+                            child: Image.asset(pertumbuhanayam[fase],
+                            key: ValueKey<String>(pertumbuhanayam[fase]),
                           fit: BoxFit.contain,
-                          height: ukurangambar[tahap].height,
-                          width: ukurangambar[tahap].width,
+                          height: ukurangambar[fase].height,
+                          width: ukurangambar[fase].width,
                             )
                           ),
                           ),

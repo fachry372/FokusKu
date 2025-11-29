@@ -26,7 +26,7 @@ class _TamantelurState extends State<Tamantelur> {
                           ),
                           Positioned(
                             top: 60,
-                            child: Image.asset("assets/images/telur.png",
+                            child: Image.asset("assets/images/fase0.png",
                           fit: BoxFit.contain,
                           height: 80,
                           width: 61,
