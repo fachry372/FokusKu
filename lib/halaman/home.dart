@@ -21,8 +21,7 @@ class Home extends StatelessWidget {
     final TextEditingController babakController =
         TextEditingController(text: timerService.babak.toString());
 
-
-    final formKey = GlobalKey<FormState>();
+     final formKey = GlobalKey<FormState>();
 
     
 
@@ -174,7 +173,7 @@ TextFormField(
     }
     final numVal = int.tryParse(value);
     if (numVal == null) return "Harus berupa angka";
-    if (numVal < 15 || numVal > 30) return "Durasi 15 hingga 30 menit.";
+    if (numVal < 1 || numVal > 30) return "Durasi 15 hingga 30 menit.";
     return null;
   },
 ),
@@ -182,7 +181,7 @@ const SizedBox(height: 15),
 Align(
   alignment: Alignment.centerLeft,
   child: Text(
-    "Jumlah babak :",
+    "Jumlah sesi :",
     style: GoogleFonts.inter(
       fontSize: 14,
       fontWeight: FontWeight.w500,
@@ -213,11 +212,11 @@ TextFormField(
   ),
   validator: (value) {
     if (value == null || value.isEmpty) {
-      return "Jumlah babak tidak boleh kosong";
+      return "Jumlah sesi tidak boleh kosong";
     }
     final numVal = int.tryParse(value);
     if (numVal == null) return "Harus berupa angka";
-    if (numVal < 1 || numVal > 4) return "Babak 1 hingga 4.";
+    if (numVal < 1 || numVal > 4) return "sesi 1 hingga 4.";
     return null;
   },
 ),

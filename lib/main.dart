@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:fokusku/auth/auth_gate.dart';
 import 'package:fokusku/halaman/navbar.dart';
 import 'package:fokusku/kirimlink.dart';
 import 'package:fokusku/register.dart';
 import 'package:fokusku/resetpassword.dart';
+import 'package:fokusku/splashscreen/splashscreen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:fokusku/timer/timer.dart';
+
+
 
 import 'login.dart';
 
@@ -41,6 +43,7 @@ void main() async {
 
 
 
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -61,10 +64,32 @@ class _MyAppState extends State<MyApp> {
         '/Daftar': (context) => Register(),
         '/Masuk' : (context) => LoginScreen(),
         '/reset' : (context) => Resetpassword(),
-        '/home' : (context) => Navbar(),
+        '/home'  : (context) => Navbar(),
         '/kirim' : (context) => Kirimlink(),
       },
-      home: AuthGate() ,
+      // home: SplashScreen() ,
+      home: SplashScreen(),
     );
   }
 }
+
+
+
+@pragma("vm:entry-point")
+void overlayMain() {
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Material(
+        color: Colors.transparent,
+        child: Center(
+          child: Text(
+            "My overlay",
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+        ),
+      ),
+    )
+  );
+}
+

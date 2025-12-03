@@ -7,9 +7,10 @@ class TimerService extends ChangeNotifier {
   int _remainingSeconds = 0;
   Timer? _timer;
 
+ 
   int focusSeconds = 1500; 
   int breakSeconds = 60;  
-  int longBreakSeconds = 900; 
+  int longBreakSeconds = 60; 
   int babak = 4; 
 
   bool isFocus = true;
@@ -44,6 +45,7 @@ int getMaxPhase(int babak) {
 }
 
 bool tunggureward = false;
+bool get isLongBreakFinished => !isFocus && _remainingSeconds == 0;
 
  
 
@@ -61,7 +63,7 @@ String get nextSessionLabel {
   } else if (step == babak * 2 - 1) {
     return "Selanjutnya: Istirahat panjang";
   } else {
-    return "Selesai semua babak";
+    return "Selesai semua sesi";
   }
 }
 
@@ -83,6 +85,8 @@ String get nextSessionLabel {
     startNextStep();
   }
 
+  
+
   void startNextStep() {
    
     if (step <= babak * 2 - 1) {
@@ -98,25 +102,17 @@ String get nextSessionLabel {
     }
   }
 
-  void startFocus() {
+ void startFocus() {
   isFocus = true;
   start(
     seconds: focusSeconds,
     onFinished: () {
-      int currentBabak = (step + 1) ~/ 2;
-
-      if (currentBabak == babak) {
-        // Jika babak terakhir → tunggu reward
-        tunggureward = true;
-        notifyListeners();
-      } else {
-        // Lanjut ke step berikutnya seperti biasa
-        step++;
-        startNextStep();
-      }
+      step++;
+      startNextStep();
     },
   );
 }
+
 
 
   void startShortBreak() {
@@ -130,15 +126,21 @@ String get nextSessionLabel {
     );
   }
 
+ 
+
   void startLongBreak() {
-    isFocus = false;
-    start(
-      seconds: longBreakSeconds,  
-      onFinished: () {
-        stop();
-      },
-    ); 
-  }
+  isFocus = false;
+
+  start(
+    seconds: longBreakSeconds,
+    onFinished: () {
+      tunggureward = true;
+      notifyListeners();
+      stop();
+    },
+  );
+}
+
 
 void start({required int seconds, VoidCallback? onFinished}) {
   _remainingSeconds = seconds;
@@ -189,6 +191,8 @@ void start({required int seconds, VoidCallback? onFinished}) {
 
     reset();
   }
+
+  
 
   @override
   void dispose() {

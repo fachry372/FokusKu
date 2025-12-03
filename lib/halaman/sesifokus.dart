@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fokusku/auth/riwayatkoleksi.dart';
 import 'package:fokusku/tamandantelur/tamandantelurfokus.dart';
 import 'package:fokusku/tamandantelur/tamanteluristirahat.dart';
 import 'package:fokusku/timer/timer.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 
 class Sesifokus extends StatefulWidget {
@@ -11,159 +13,310 @@ class Sesifokus extends StatefulWidget {
 
   const Sesifokus({super.key, required this.timerService});
 
-  
-
   @override
   State<Sesifokus> createState() => _SesifokusState();
 }
 
-class _SesifokusState extends State<Sesifokus> {
+class _SesifokusState extends State<Sesifokus>  {
   late TimerService timer;
   bool rewardShown = false;
 
-
-  void showRewardDialog(BuildContext context, TimerService timer) {
-  int babak = (timer.step + 1) ~/ 2;
-
-  // Tentukan fase reward berdasarkan babak
-  int rewardPhase = timer.getMaxPhase(babak);
-
-  // Ambil gambar
-  String rewardImage = TamandantelurFokus(
-    remainingseconds: 0,
-    totalseconds: 1,
-    babak: babak,
-    timerService: timer,
-  ).pertumbuhanayam[rewardPhase];
-
-  showDialog(
-  context: context,
-  barrierDismissible: false,
-  builder: (context) => AlertDialog(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-    ),
-    backgroundColor: const Color(0xFFE6F2E6),
-    contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-
-    title: Center(
-      child: Text(
-        "Selamat!",
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.bold,
-          fontSize: 22,
-          color: Colors.black,
-        ),
-      ),
-    ),
-
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          "Kamu telah menyelesaikan Babak $babak",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // GAMBAR REWARD
-        Image.asset(
-          rewardImage,
-          width: 140,
-          height: 140,
-          fit: BoxFit.contain,
-        ),
-
-        const SizedBox(height: 20),
-      ],
-    ),
-
-    actionsPadding: const EdgeInsets.only(bottom: 10, right: 10, left: 10),
-
-    actions: [
-      SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-
-            timer.tunggureward = false;
-            timer.step++;
-            timer.startNextStep();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF52B755),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-          child: Text(
-            "Lanjut Istirahat",
-            style: GoogleFonts.inter(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
-    ],
-  ),
-);
-
-}
-
-
-  @override
+   @override
   void initState() {
     super.initState();
     timer = widget.timerService;
-    timer.startPomodoro(); 
+    timer.startPomodoro();
+    rewardShown= false;
+    timer.addListener(_checkReward);
+
   }
 
-  @override
+   @override
   void dispose() {
-    timer.stop(); 
-    super.dispose();
+    timer.removeListener(_checkReward);
+    timer.stop();
+     super.dispose();
   }
+
+
+void _checkReward() {
+  if (timer.tunggureward && !rewardShown && mounted) {
+    rewardShown = true;
+
+    int babak = (timer.step + 1) ~/ 2;
+    int rewardPhase = timer.getMaxPhase(babak);
+
+    final dummyAyam = TamandantelurFokus(
+      remainingseconds: 0,
+      totalseconds: 1,
+      babak: babak,
+      timerService: timer,
+    );
+
+   
+    showRewardDialog(context, timer);
+
+   
+    timer.tunggureward = false;
+
+    
+    Future(() async {
+      await RewardService.save(
+        menitFokus: ((timer.focusSeconds ~/ 60) * timer.babak),
+        faseAyam: rewardPhase,
+        rewardImage: dummyAyam.pertumbuhanayam[rewardPhase].split("/").last,
+      );
+    });
+  }
+}
+
+
+  
+
+ Future<bool> _konfirmasikeluar() async {
+   
+  if (timer.isLongBreakFinished) {
+    
+    return true;
+  }
+  return await showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: const Color(0xFFE6F2E6),
+        contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+
+        title: Center(
+          child: Text(
+            "Yakin Menyerah?",
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: const Color(0xFF182E19),
+            ),
+          ),
+        ),
+
+        content: Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 10),
+          child: Text(        
+            "Kalau kamu menyerah sekarang, sesi fokus akan berhenti. ",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              color: const Color(0xFF4E574E),
+              height: 1.4,
+            ),
+          ),
+        ),
+
+        actionsPadding: const EdgeInsets.all(20),
+
+        actions: [
+          Row(
+            children: [
+
+               Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                   backgroundColor:Color.fromARGB(255, 100, 88, 88),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    "Menyerah",
+                    style: GoogleFonts.inter(
+                      color: const Color(0xffffffff),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+             
+              const SizedBox(width: 12),
+
+              
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF52B755),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    "Lanjut",
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+             
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+  void showRewardDialog(BuildContext context, TimerService timer) {
+    int babak = (timer.step + 1) ~/ 2;
+
+    int rewardPhase = timer.getMaxPhase(babak);
+
+    String rewardImage = TamandantelurFokus(
+      remainingseconds: 0,
+      totalseconds: 1,
+      babak: babak,
+      timerService: timer,
+    ).pertumbuhanayam[rewardPhase];
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFFE6F2E6),
+        contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+
+        title: Center(
+          child: Text(
+            "Selamat!",
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: Colors.black,
+            ),
+          ),
+        ),
+
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Kamu telah menyelesaikan sesi $babak",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.black87),
+            ),
+
+            const SizedBox(height: 20),
+
+            Image.asset(
+              rewardImage,
+              width: 140,
+              height: 140,
+              fit: BoxFit.contain,
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+
+        actionsPadding: const EdgeInsets.only(bottom: 10, right: 10, left: 10),
+
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);   
+                timer.stop();             
+
+                
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+
+
+                Navigator.pushReplacementNamed(context, '/home');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF52B755),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                "Selesai",
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+ 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAEFD9),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 21),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: SvgPicture.asset(
-                    "assets/icons/close.svg",
-                    height: 33,
-                    width: 33,
-                  ),
-                ),
-                const SizedBox(height: 56),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
 
-               Center(
-                 child: AnimatedBuilder(
+        bool keluar = await _konfirmasikeluar();
+
+        if (keluar) {
+          timer.stop();
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFEAEFD9),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 21),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () async {
+                      bool keluar = await _konfirmasikeluar();
+                      if (keluar) {
+                        timer.stop();
+                        if (!mounted) return;
+                          Navigator.pop(context);
+                        }
+                       },
+                    icon: SvgPicture.asset(
+                      "assets/icons/close.svg",
+                      height: 33,
+                      width: 33,
+                    ),
+                  ),
+                  const SizedBox(height: 56),
+
+                  Center(
+                    child: AnimatedBuilder(
                       animation: timer,
                       builder: (_, __) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                             Text(
+                            Text(
                               timer.currentSessionLabel,
                               style: GoogleFonts.inter(
                                 fontSize: 27,
@@ -172,9 +325,8 @@ class _SesifokusState extends State<Sesifokus> {
                               ),
                             ),
 
-                             const SizedBox(height: 6),
+                            const SizedBox(height: 6),
 
-                          
                             Text(
                               timer.nextSessionLabel,
                               style: GoogleFonts.inter(
@@ -186,15 +338,17 @@ class _SesifokusState extends State<Sesifokus> {
 
                             const SizedBox(height: 6),
 
-                         
                             Container(
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4,
+                                horizontal: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xffDDE4C7),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "Babak ${(timer.step + 1) ~/ 2} / ${timer.babak}",
+                                "Sesi ${(timer.step + 1) ~/ 2} / ${timer.babak}",
                                 style: GoogleFonts.inter(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -202,86 +356,76 @@ class _SesifokusState extends State<Sesifokus> {
                                 ),
                               ),
                             ),
-
-                           
-
                           ],
                         );
                       },
                     ),
-               ),
+                  ),
 
-
-                const SizedBox(height: 40),
-                Center(
-                  child: AnimatedBuilder(
+                  const SizedBox(height: 40),
+                  Center(
+                    child: AnimatedBuilder(
                       animation: timer,
                       builder: (_, __) {
-
-                         // CEK: waktunya habis + ini babak terakhir + belum ditampilkan sebelumnya
-                        if (timer.seconds == 0 && timer.isLastBabak && !rewardShown) {
-                          rewardShown = true;
-                          Future.microtask(() {
-                            if (!mounted) return;
-                             showRewardDialog(context, timer);
-                          });
-                        }
-
                         return timer.isFocus
                             ? TamandantelurFokus(
                                 remainingseconds: timer.seconds,
                                 totalseconds: timer.focusSeconds,
                                 babak: (timer.step + 1) ~/ 2,
                                 timerService: timer,
-                                
                               )
-                            : 
-                            const TamanDanTelurIstirahat();
+                            : const TamanDanTelurIstirahat();
                       },
                     ),
-
-
-                ),
-                const SizedBox(height: 0),
-                Center(
-                  child: AnimatedBuilder(
-                    animation: timer,
-                    builder: (_, __) {
-                      return Text(
-                        timer.formattedTime,
-                        style: GoogleFonts.roboto(
-                          fontSize: 70,
-                          fontWeight: FontWeight.w400,
-                          height: 0.8,
+                  ),
+                  const SizedBox(height: 0),
+                  Center(
+                    child: AnimatedBuilder(
+                      animation: timer,
+                      builder: (_, __) {
+                        return Text(
+                          timer.formattedTime,
+                          style: GoogleFonts.roboto(
+                            fontSize: 70,
+                            fontWeight: FontWeight.w400,
+                            height: 0.8,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        bool keluar = await _konfirmasikeluar();
+                        if (keluar) {
+                           timer.stop();
+                           if (!mounted) return;
+                           Navigator.pop(context);
+                        }
+                       
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xffB77227),
+                        fixedSize: const Size(162, 33),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 25),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      timer.stop();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xffB77227),
-                      fixedSize: const Size(162, 33),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Menyerah",
-                        style: GoogleFonts.inter(
-                            fontSize: 24, color: Colors.white),
+                      child: Center(
+                        child: Text(
+                          "Menyerah",
+                          style: GoogleFonts.inter(
+                            fontSize: 24,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

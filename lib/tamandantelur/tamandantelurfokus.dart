@@ -23,12 +23,12 @@ TamandantelurFokus({
   
 
   final List<String> pertumbuhanayam = [
-    "assets/images/fase0.png",
-    "assets/images/fase2.png",
-    "assets/images/fase3.png",
-    "assets/images/fase4.png",
-    "assets/images/fase5.png",
-    "assets/images/fase6.png",
+    "assets/images/Telur.png",
+    "assets/images/Telur retak.png",
+    "assets/images/Menetas.png",
+    "assets/images/Anak ayam.png",
+    "assets/images/Ayam pra-dewasa.png",
+    "assets/images/Ayam dewasa.png",
   ];
 
   final List<Size> ukurangambar = [
