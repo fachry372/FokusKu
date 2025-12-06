@@ -13,7 +13,7 @@ class FocusOverlay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              "assets/logo.png", 
+              "assets/images/logo.png", 
               width: 120,
               height: 120,
             ),

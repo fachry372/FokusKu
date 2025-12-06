@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fokusku/auth/riwayatkoleksi.dart';
 import 'package:fokusku/tamandantelur/tamandantelurfokus.dart';
 import 'package:fokusku/tamandantelur/tamanteluristirahat.dart';
 import 'package:fokusku/timer/timer.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 
@@ -17,13 +19,14 @@ class Sesifokus extends StatefulWidget {
   State<Sesifokus> createState() => _SesifokusState();
 }
 
-class _SesifokusState extends State<Sesifokus>  {
+class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
   late TimerService timer;
   bool rewardShown = false;
 
    @override
   void initState() {
     super.initState();
+     WidgetsBinding.instance.addObserver(this);
     timer = widget.timerService;
     timer.startPomodoro();
     rewardShown= false;
@@ -31,12 +34,59 @@ class _SesifokusState extends State<Sesifokus>  {
 
   }
 
+  
+
    @override
   void dispose() {
+     WidgetsBinding.instance.removeObserver(this);
     timer.removeListener(_checkReward);
     timer.stop();
      super.dispose();
   }
+
+  
+@override
+void didChangeAppLifecycleState(AppLifecycleState state) async {
+ 
+  if (state == AppLifecycleState.inactive ||
+      state == AppLifecycleState.paused ||
+      state == AppLifecycleState.detached) {
+
+  
+    if (!await FlutterOverlayWindow.isPermissionGranted()) {
+      await FlutterOverlayWindow.requestPermission();
+      return;
+    }
+
+    await FlutterOverlayWindow.showOverlay(
+  height: -1,
+  width: -1,
+  alignment: OverlayAlignment.center,
+);
+
+  }
+
+  // User kembali ke aplikasi
+  if (state == AppLifecycleState.resumed) {
+    await FlutterOverlayWindow.closeOverlay();
+  }
+}
+
+
+
+Future<void> simpantimer() async {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) return;
+
+  await Supabase.instance.client.from('timer').insert({
+    'user_id': user.id,
+    'durasi_fokus': timer.focusSeconds ~/ 60,
+    'durasi_istirahat': timer.breakSeconds ~/ 60,
+    'durasi_istirahat_panjang': timer.longBreakSeconds ~/ 60,
+    'jumlah_sesi': timer.babak,
+    'selesai': true,
+  });
+}
 
 
 void _checkReward() {
@@ -56,6 +106,7 @@ void _checkReward() {
    
     showRewardDialog(context, timer);
 
+    simpantimer();
    
     timer.tunggureward = false;
 

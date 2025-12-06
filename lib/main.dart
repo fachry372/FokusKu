@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/halaman/navbar.dart';
+import 'package:fokusku/izinoverlay/overlay.dart';
 import 'package:fokusku/kirimlink.dart';
 import 'package:fokusku/register.dart';
 import 'package:fokusku/resetpassword.dart';
@@ -14,7 +15,19 @@ import 'login.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+// overlay entry point
+@pragma("vm:entry-point")
+void overlayMain() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: FocusOverlay()
+  ));
+}
+
+
+
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmbXNtZGZhcnBja2puaXRzcm1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwOTkyMjMsImV4cCI6MjA3ODY3NTIyM30.cNc5jesGoxMs4_9eyjCDG6Bo-Whol8rPGyKo5Qi7j9g" ,
@@ -67,29 +80,12 @@ class _MyAppState extends State<MyApp> {
         '/home'  : (context) => Navbar(),
         '/kirim' : (context) => Kirimlink(),
       },
-      // home: SplashScreen() ,
-      home: SplashScreen(),
+      // home: SplashScreen() ,    
+      home: Navbar(),
     );
   }
 }
 
 
 
-@pragma("vm:entry-point")
-void overlayMain() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Material(
-        color: Colors.transparent,
-        child: Center(
-          child: Text(
-            "My overlay",
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-        ),
-      ),
-    )
-  );
-}
 
