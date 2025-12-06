@@ -265,7 +265,7 @@ class _KoleksiState extends State<Koleksi> {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
-                        "Hari",
+                        "Harian",
                         style: GoogleFonts.inter(
                           color: isDailySelected ? Colors.white : primaryTextColor,
                           fontWeight: FontWeight.w600,
@@ -285,7 +285,7 @@ class _KoleksiState extends State<Koleksi> {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
-                        "Minggu",
+                        "Mingguan",
                         style: GoogleFonts.inter(
                           color: !isDailySelected ? Colors.white : primaryTextColor,
                           fontWeight: FontWeight.w600,
