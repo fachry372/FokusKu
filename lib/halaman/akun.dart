@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/auth/auth_service.dart';
+import 'package:fokusku/halaman/akun/about.dart';
+import 'package:fokusku/halaman/akun/settingakun.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Akun extends StatefulWidget {
   const Akun({super.key});
@@ -12,7 +15,7 @@ class Akun extends StatefulWidget {
 class _AkunState extends State<Akun> {
   final authservice = AuthService();
 
-   void logout() async {
+  void logout() async {
     try {
       await authservice.signOut();
 
@@ -29,24 +32,27 @@ class _AkunState extends State<Akun> {
   }
 
   static const Color teks = Color(0xff182E19);
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEAEFD9),
-     
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 30,),
-              Text("Akun",style: GoogleFonts.inter(color: teks,fontSize: 24,fontWeight: FontWeight.w600),),
+              const SizedBox(height: 30),
+              Text(
+                "Akun",
+                style: GoogleFonts.inter(
+                    color: teks, fontSize: 24, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 30),
 
               // FOTO PROFIL
               const CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage("assets/profil.jpg"), 
+                radius: 60,
+                backgroundImage: AssetImage("assets/images/logo.png"),
               ),
 
               const SizedBox(height: 10),
@@ -72,66 +78,68 @@ class _AkunState extends State<Akun> {
               const SizedBox(height: 10),
 
               Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-  child: Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-      "Ringkasan",
-      style: GoogleFonts.inter(color: teks,fontSize: 20,fontWeight: FontWeight.w600),
-    ),
-  ),
-),
-
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Ringkasan",
+                    style: GoogleFonts.inter(
+                        color: teks,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20),
+
               // === RINGKASAN ===
-             Padding(
-  padding: const EdgeInsets.only(left: 15.0,right: 15.0),
-  child: Row(
-    children: [
-      Expanded(
-        child: _buildSummaryCard(
-          icon: Icons.timer,
-          title: "25 Menit",
-          subtitle: "Total waktu fokus",
-        ),
-      ),
-      const SizedBox(width: 5),
-
-      Expanded(
-        child: _buildSummaryCard(
-          icon: Icons.pets,
-          title: "3 Hewan",
-          subtitle: "Total hewan",
-        ),
-      ),
-      const SizedBox(width: 5),
-
-      Expanded(
-        child: _buildSummaryCard(
-          icon: Icons.bar_chart,
-          title: "25 Menit/Hari",
-          subtitle: "Rata-rata waktu \nfokus",
-        ),
-      ),
-    ],
-  ),
-),
-
+              Padding(
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildSummaryCard(
+                        svgPath: "assets/icons/timer.svg",
+                        title: "25 Menit",
+                        subtitle: "Total waktu fokus",
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: _buildSummaryCard(
+                        svgPath: "assets/icons/Pets.svg",
+                        title: "3 Hewan",
+                        subtitle: "Total hewan",
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: _buildSummaryCard(
+                        svgPath: "assets/icons/chart.svg",
+                        title: "25 Menit/Hari",
+                        subtitle: "Rata-rata waktu \nfokus",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
               const SizedBox(height: 20),
 
               Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-  child: Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-      "Lainnya",
-      style: GoogleFonts.inter(color: teks,fontSize: 20,fontWeight: FontWeight.w600),
-    ),
-  ),
-),
-
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Lainnya",
+                    style: GoogleFonts.inter(
+                        color: teks,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20),
 
@@ -139,32 +147,34 @@ class _AkunState extends State<Akun> {
               Padding(
                 padding: const EdgeInsets.only(left: 15.0, right: 15),
                 child: Container(
-                  height: 165 ,
-                  width: 375 ,
-                 
+                  height: 135,
+                  width: 375,
                   decoration: BoxDecoration(
-                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10)
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        _buildMenuItem(
-                          title: "Pengaturan Akun",
-                          onTap: () {},
-                        ),
-                        _buildMenuItem(
-                          title: "Tentang Kami",
-                          onTap: () {},
-                        ),
-                        _buildMenuItem(
-                          title: "Keluar",
-                          onTap: () {},
-                          isRed: true,
-                        ),
-                      ],
-                    ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Column(
+                    children: [
+                      _buildMenuItem(
+                        title: "Pengaturan Akun",
+                        leadingSvg: "assets/icons/account.svg",
+                        onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => Settingakun())),
+                       
+                      ),
+                      _buildMenuItem(
+                        title: "Tentang Kami",
+                        leadingSvg: "assets/icons/about.svg",
+                        onTap: () => Navigator.push(context, 
+                        MaterialPageRoute(builder: (_) => About())) ,
+                      ),
+                      _buildMenuItem(
+                        title: "Keluar",
+                        leadingSvg: "assets/icons/logout.svg",
+                        onTap: () => logout(),
+                        isRed: true,
+                        isLast: true,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -172,64 +182,111 @@ class _AkunState extends State<Akun> {
           ),
         ),
       ),
-
-     
     );
   }
 
-  // Card Ringkasan
-  Widget _buildSummaryCard({required IconData icon, required String title, required String subtitle}) {
+  // Card Ringkasan (pakai SVG)
+  Widget _buildSummaryCard({
+    required String svgPath,
+    required String title,
+    required String subtitle,
+  }) {
     return Container(
-      height: 110,
-      width: 141,
-      padding: const EdgeInsets.all(12),
+      height: 108,
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 30, color: Colors.green),
-          const SizedBox(height: 8),
+          SvgPicture.asset(
+            svgPath,
+            height: 35,
+          ),
+          const SizedBox(height: 5),
           Text(
             title,
-            style: GoogleFonts.inter(fontSize: 12,fontWeight: FontWeight.w600),
+            style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xff182E19)),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 7),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 10,fontWeight: FontWeight.w400),
+            style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: Color(0xff919891)),
           ),
         ],
       ),
     );
   }
 
-  // Menu item
-  Widget _buildMenuItem({required String title, required VoidCallback onTap, bool isRed = false}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.black12)),
-        ),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: isRed ? Colors.red : Colors.black87,
-                fontWeight: isRed ? FontWeight.bold : FontWeight.normal,
+  Widget _buildMenuItem({
+  required String title,
+  required VoidCallback onTap,
+  String? leadingSvg, // ← SVG icon kiri (opsional)
+  bool isRed = false,
+  bool isLast = false,
+}) {
+  return InkWell(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 8,horizontal: 12),
+      decoration: BoxDecoration(
+            border: isLast
+            ? null
+            : const Border(
+                bottom: BorderSide(
+                  color: Color(0xFFE0E0E0),
+                  width: 1,
+                ),
+              ),
+      ),
+      child: Row(
+        children: [
+          // ==== ICON KIRI (SVG) ====
+          if (leadingSvg != null) ...[
+            SvgPicture.asset(
+              leadingSvg,
+              height: 27,
+              colorFilter: ColorFilter.mode(
+                isRed ?  Color(0xff821111) : Color(0xff606C60),
+                BlendMode.srcIn,
               ),
             ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios, size: 16, color: isRed ? Colors.red : Colors.black54),
+            const SizedBox(width: 12),
           ],
-        ),
+
+          // ==== TEXT ====
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: isRed ?  Color(0xff821111) : Color(0xff606C60),
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+
+          const Spacer(),
+
+          // ==== ICON ARROW KANAN (SVG) ====
+          SvgPicture.asset(
+            "assets/icons/arrow.svg",
+            height: 16,
+            colorFilter: ColorFilter.mode(
+              Color(0xff73A373),
+              BlendMode.srcIn,
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

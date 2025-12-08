@@ -131,8 +131,18 @@ class _KoleksiState extends State<Koleksi> {
       final end = DateTime(today.year, today.month, today.day, 23, 59, 59);
       query = query.gte('created_at', start.toIso8601String()).lte('created_at', end.toIso8601String());
     } else {
-      final start = today.subtract(const Duration(days: 6));
-      query = query.gte('created_at', start.toIso8601String());
+      final today = DateTime.now();
+final int weekday = today.weekday; // 1 = Senin
+
+final weekStart = DateTime(today.year, today.month, today.day)
+    .subtract(Duration(days: weekday - 1));
+
+final weekEnd = weekStart.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+
+query = query
+    .gte('created_at', weekStart.toIso8601String())
+    .lte('created_at', weekEnd.toIso8601String());
+
     }
 
     final response = await query;
@@ -376,7 +386,7 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
       children: [
         Center(
           child: Text(
-            "Total Fokus Hari Ini : ${dailyHourMinutes.fold(0, (s, e) => s + e)} Menit",
+            "Total fokus hari ini : ${dailyHourMinutes.fold(0, (s, e) => s + e)} Menit",
             style: GoogleFonts.inter(
               color: primaryTextColor,
               fontSize: 14,
@@ -526,7 +536,7 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
       children: [
         Center(
           child: Text(
-            "Total Fokus Minggu Ini : ${weeklyFocus.fold(0, (s, e) => s + e)} Menit",
+            "Total fokus minggu ini : ${weeklyFocus.fold(0, (s, e) => s + e)} Menit",
             style: GoogleFonts.inter(
               color: primaryTextColor,
               fontSize: 14,
