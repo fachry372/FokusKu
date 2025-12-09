@@ -19,6 +19,7 @@ class AuthService {
     await _supabase.from('users').insert({
       'id': user.id,
       'nama': name,
+      'email': email,
     });
 
     return response;

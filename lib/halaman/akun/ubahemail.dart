@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fokusku/auth/akun_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Ubahemail extends StatefulWidget {
   const Ubahemail({super.key});
@@ -11,8 +13,16 @@ class Ubahemail extends StatefulWidget {
 class _UbahemailState extends State<Ubahemail> {
   final _formKey = GlobalKey<FormState>();
 
+  final akunservice = AkunService();
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  User? user = Supabase.instance.client.auth.currentUser;
+  String? userId;
+  
+  
+  String emailUser = "";
 
   bool isEnabled = false;
   bool isLoading = false;
@@ -20,7 +30,7 @@ class _UbahemailState extends State<Ubahemail> {
   @override
   void initState() {
     super.initState();
-
+    checkLogin();
     // Listener: aktifkan tombol jika kedua field terisi
     _emailController.addListener(checkFields);
     _passwordController.addListener(checkFields);
@@ -33,17 +43,110 @@ class _UbahemailState extends State<Ubahemail> {
     });
   }
 
-  Future<void> updateEmail() async {
-    setState(() => isLoading = true);
+Future<void> updateEmail() async {
+  if (!mounted) return;
 
-    await Future.delayed(const Duration(seconds: 1)); // simulasi API
+  setState(() => isLoading = true);
 
-    setState(() => isLoading = false);
+  final newEmail = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Email berhasil diperbarui")),
+  try {
+    final supabase = Supabase.instance.client;
+    final currentUser = supabase.auth.currentUser;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User tidak ditemukan, silakan login ulang")),
+      );
+      return;
+    }
+
+    // Konfirmasi password
+    final signInRes = await supabase.auth.signInWithPassword(
+      email: currentUser.email!,
+      password: password,
     );
+
+    if (signInRes.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password salah!")),
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+
+    // Update email di auth
+    final updateRes = await supabase.auth.updateUser(
+      UserAttributes(email: newEmail),
+      );
+
+    if (updateRes.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal memperbarui email")),
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+
+    // Update juga di tabel users (opsional, untuk UI)
+    await supabase.from('users').update({'email': newEmail}).eq('id', currentUser.id);
+
+    // Tampilkan notifikasi verifikasi
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Silakan cek inbox Anda untuk verifikasi email.",
+        ),
+        duration: Duration(seconds: 5),
+      ),
+    );
+
+    Navigator.pop(context, true); // kembali ke halaman sebelumnya
+
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Terjadi kesalahan: $e")),
+    );
+  } finally {
+    if (mounted) setState(() => isLoading = false);
   }
+}
+
+
+
+  void checkLogin() {
+    if (user == null) {
+    
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, "/Masuk");
+      });
+      return;
+    }
+
+    
+    userId = user!.id;
+    loadUserData();
+  }
+
+
+   void loadUserData() async {
+  if (userId == null) return;
+
+  final data = await akunservice.getCompleteUserData(userId!);
+  
+ 
+
+
+  if (mounted) {
+    setState(() {
+      emailUser = data?['email'] ?? "";
+      
+    });
+  }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +154,7 @@ class _UbahemailState extends State<Ubahemail> {
       backgroundColor: const Color(0xFFEAEFD9),
 
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           "Ubah Email",
           style: GoogleFonts.inter(
@@ -91,7 +195,7 @@ class _UbahemailState extends State<Ubahemail> {
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
-                    
+                      hintText: emailUser,
                       hintStyle: GoogleFonts.inter(
                           color: const Color.fromARGB(255, 165, 165, 165)),
                       border: OutlineInputBorder(

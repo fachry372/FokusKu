@@ -20,18 +20,18 @@ class _NavbarState extends State<Navbar> {
   final Color selectedColor = Color(0xff316E33);
   final Color unselectedColor = Color(0xffA5A8A5);
 
-   String _getlabel(int index) {
-            switch (index) {
-              case 0:
-              return "Home";
-              case 1:
-              return "Koleksi";
-              case 2:
-              return "Akun";
-              default:
-              return "";
-            }
-           }
+  String _getlabel(int index) {
+    switch (index) {
+      case 0:
+        return "Home";
+      case 1:
+        return "Koleksi";
+      case 2:
+        return "Akun";
+      default:
+        return "";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +40,6 @@ class _NavbarState extends State<Navbar> {
 
       body: IndexedStack(index: _currentIndex, children: halaman),
       bottomNavigationBar: Container(
-        
-        
         decoration: BoxDecoration(
           color: Color(0xffffffff),
           borderRadius: BorderRadius.only(
@@ -54,66 +52,60 @@ class _NavbarState extends State<Navbar> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _navItem("assets/icons/home.svg",0,33),
+            _navItem("assets/icons/home.svg", 0, 33),
             _navItem("assets/icons/koleksi.svg", 1, 33),
-            _navItem("assets/icons/akun.svg", 2, 32),
-          ]
-
-          
-             
+            _navItem("assets/icons/akun.svg", 2, 33),
+          ],
         ),
       ),
     );
   }
 
+  Widget _navItem(String asset, int index, double size) {
+    bool selected = _currentIndex == index;
 
-Widget _navItem(String asset , int index ,double size) {
- bool selected = _currentIndex == index;
+    return Material(
+      color: Colors.transparent,
+      child: InkResponse(
+        onTap: () {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
 
- return Material(
-color: Colors.transparent,
- child: InkResponse(
- onTap: () {
- setState(() {
- _currentIndex = index;
- });
- },
-        
- radius: 70, 
- containedInkWell: true, 
- highlightShape: BoxShape.circle, 
-borderRadius: BorderRadius.circular(10),
-splashColor: Color.fromARGB(255, 201, 207, 200),
- child: Container(
-  width: 80,
- 
- padding: const EdgeInsets.symmetric(vertical: 6, ), 
- child: Column(
-mainAxisSize: MainAxisSize.min,
-children: [ 
- SvgPicture.asset(
- asset,
- height: size,
- width: size,
- colorFilter: ColorFilter.mode(
- selected ? selectedColor : unselectedColor,
- BlendMode.srcIn,
- ),
-),
- const SizedBox(height: 4,),
- Text(
- _getlabel(index),
- style: GoogleFonts.inter(fontSize: 12,
- color: selected ? selectedColor : unselectedColor,
-),
-),
+        radius: 70,
+        containedInkWell: true,
+        highlightShape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(10),
+        splashColor: Color.fromARGB(255, 201, 207, 200),
+        child: Container(
+          width: 80,
 
-
- ]
- )
- )
- ),
- );
- }
-  } 
-
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                asset,
+                height: size,
+                width: size,
+                colorFilter: ColorFilter.mode(
+                  selected ? selectedColor : unselectedColor,
+                  BlendMode.srcIn,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _getlabel(index),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: selected ? selectedColor : unselectedColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

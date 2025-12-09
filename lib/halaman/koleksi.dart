@@ -644,7 +644,7 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
                 Text(
                   "Koleksi Saya",
@@ -691,14 +691,14 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(height: 30),
 
                 Text(
                   "Statistik",
                   style: GoogleFonts.inter(color: primaryTextColor, fontSize: 24, fontWeight: FontWeight.w600),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
 
                 _buildTimeToggle(primaryTextColor, accentColor),
 

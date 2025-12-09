@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fokusku/auth/akun_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Ubahname extends StatefulWidget {
   const Ubahname({super.key});
@@ -10,42 +12,92 @@ class Ubahname extends StatefulWidget {
 
 class _UbahnameState extends State<Ubahname> {
   final _formKey = GlobalKey<FormState>();
+  final akunservice = AkunService();
   final TextEditingController _nameController = TextEditingController();
+
+  User? user = Supabase.instance.client.auth.currentUser;
+  String? userId;
+  
+  String namaUser = "";
 
   bool isEnabled = false;
   bool isLoading = false;
 
-  // Contoh fungsi update username
-  Future<void> updateName() async {
-    setState(() {
-      isLoading = true;
-    });
+ 
+  void simpanNamaBaru() async {
+  if (!mounted) return;
 
-    await Future.delayed(const Duration(seconds: 2)); // simulasi API
+  setState(() => isLoading = true);
 
-    setState(() {
-      isLoading = false;
-    });
+  String newName = _nameController.text.trim();
+  String? userId = Supabase.instance.client.auth.currentUser?.id;
 
-    ScaffoldMessenger.of(context).clearSnackBars();
+  bool success = await akunservice.ubahNama(userId!, newName);
 
+  if (!mounted) return;
+
+  setState(() => isLoading = false);
+
+  ScaffoldMessenger.of(context).clearSnackBars();
+
+  if (success) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Username berhasil diperbarui")),
+      const SnackBar(content: Text("Nama berhasil diubah!")),
+    );
+    Navigator.pop(context);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Gagal mengubah nama.")),
     );
   }
+}
+
 
   @override
 void initState() {
   super.initState();
-
+    checkLogin();
   _nameController.addListener(() {
     final text = _nameController.text.trim();
 
     setState(() {
       isEnabled = text.isNotEmpty;   // true kalau tidak kosong
+    
     });
   });
 }
+
+void checkLogin() {
+    if (user == null) {
+    
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, "/Masuk");
+      });
+      return;
+    }
+
+    
+    userId = user!.id;
+    loadUserData();
+  }
+
+
+   void loadUserData() async {
+  if (userId == null) return;
+
+  final data = await akunservice.getCompleteUserData(userId!);
+  
+ 
+
+
+  if (mounted) {
+    setState(() {
+      namaUser = data?['nama'] ?? "";
+      
+    });
+  }
+}
+
 
 
   @override
@@ -53,6 +105,7 @@ void initState() {
     return Scaffold(
       backgroundColor: const Color(0xFFEAEFD9),
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           "Ubah Username",
           style: GoogleFonts.inter(
@@ -94,45 +147,45 @@ void initState() {
 
                   const SizedBox(height: 6),
 
-                  TextFormField(
-                    controller: _nameController,
-                    keyboardType: TextInputType.name,
-                    maxLength: 20,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintStyle: GoogleFonts.inter(
-                          color: const Color.fromARGB(255, 165, 165, 165)),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 148, 150, 147)),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 68, 161, 68)),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    cursorColor: const Color.fromARGB(255, 68, 161, 68),
+                 TextFormField(
+              controller: _nameController,
+              keyboardType: TextInputType.name,
+              maxLength: 20,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Color(0xffffffff),
+                hintText: namaUser,
+                 hintStyle: GoogleFonts.inter(color: Color.fromARGB(255, 165, 165, 165)),
+                border: OutlineInputBorder(
                   
-                    validator: (value) {
-                      final text = value?.trim() ?? "";
-                  
-                      if (text.isEmpty) {
-                        return "Username tidak boleh kosong";
-                      }
-                  
-                      if (text.length > 20) {
-                        return "Username maksimal 20 karakter";
-                      }
-                  
-                      return null;
-                    },
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                ),
+                 enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color.fromARGB(255, 148, 150, 147)),
+                  borderRadius: BorderRadius.circular(15)
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color.fromARGB(255, 68, 161, 68)),
+                  borderRadius: BorderRadius.circular(15)
+                ),
+                errorMaxLines: 2,
+              ),
+              cursorColor: Color.fromARGB(255, 68, 161, 68),
+
+               validator: (value) {
+
+                final text = value ?? "";
+
+                if (text.trim().isEmpty) {
+          return "Username tidak boleh kosong";
+                }
+                
+                if (text.length > 20) {
+          return "Username maksimal 20 karakter";
+                }
+                return null;
+              },
+            ),
 
                   const SizedBox(height: 32),
 
@@ -140,7 +193,8 @@ void initState() {
                     onPressed: isEnabled && !isLoading
                         ? () {
                             if (_formKey.currentState!.validate()) {
-                              updateName();
+                              simpanNamaBaru();
+                              
                             }
                           }
                         : null,

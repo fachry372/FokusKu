@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fokusku/auth/akun_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 class Ubahpassword extends StatefulWidget {
   const Ubahpassword({super.key});
@@ -10,11 +12,11 @@ class Ubahpassword extends StatefulWidget {
 
 class _UbahpasswordState extends State<Ubahpassword> {
   final _formKey = GlobalKey<FormState>();
-
+  final akunserice = AkunService();
 
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
 
   bool isEnabled = false;
@@ -23,16 +25,14 @@ final TextEditingController _confirmPasswordController = TextEditingController()
   @override
   void initState() {
     super.initState();
-
     _passwordController.addListener(checkFields);
     _newPasswordController.addListener(checkFields);
-_confirmPasswordController.addListener(checkFields);
+    _confirmPasswordController.addListener(checkFields);
 
   }
 
 @override
 void dispose() {
- 
   _passwordController.dispose();
   _newPasswordController.dispose();
   _confirmPasswordController.dispose();
@@ -46,23 +46,51 @@ void dispose() {
     });
   }
 
-  Future<void> updatePassword() async {
-    setState(() => isLoading = true);
+   Future<void> ubahpassword() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    await Future.delayed(const Duration(seconds: 1)); // simulasi API
+  setState(() => isLoading = true);
 
-    setState(() => isLoading = false);
+  final akunService = AkunService();
 
+  // Memanggil fungsi updatePassword dari AkunService
+  final success = await akunService.updatePassword(
+    _passwordController.text,
+    _newPasswordController.text,
+  );
+
+  setState(() => isLoading = false);
+
+  ScaffoldMessenger.of(context).clearSnackBars();
+
+  if (success) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Email berhasil diperbarui")),
+      const SnackBar(content: Text("Kata sandi berhasil diubah!")),
+    );
+    Navigator.pop(context);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Gagal mengubah kata sandi. Pastikan kata sandi lama benar.")),
     );
   }
+  
+
+  if (success) {
+    _passwordController.clear();
+    _newPasswordController.clear();
+    _confirmPasswordController.clear();
+
+  }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
        backgroundColor: const Color(0xFFEAEFD9),
      appBar: AppBar(
+      backgroundColor: Colors.white,
       title: Text("Ubah Kata Sandi",style: GoogleFonts.inter(color: Color(0xff293329),fontSize: 20 ,fontWeight: FontWeight.w500),),
       centerTitle: true,
      ),
@@ -207,7 +235,7 @@ void dispose() {
       onPressed: isEnabled && !isLoading
           ? () {
               if (_formKey.currentState!.validate()) {
-                updatePassword();
+                ubahpassword();
               }
             }
           : null,
