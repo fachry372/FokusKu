@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/auth/akun_service.dart';
+import 'package:fokusku/auth/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,7 +13,7 @@ class Ubahemail extends StatefulWidget {
 
 class _UbahemailState extends State<Ubahemail> {
   final _formKey = GlobalKey<FormState>();
-
+  final authservice = AuthService();
   final akunservice = AkunService();
 
   final TextEditingController _emailController = TextEditingController();
@@ -20,8 +21,7 @@ class _UbahemailState extends State<Ubahemail> {
 
   User? user = Supabase.instance.client.auth.currentUser;
   String? userId;
-  
-  
+
   String emailUser = "";
 
   bool isEnabled = false;
@@ -31,20 +31,21 @@ class _UbahemailState extends State<Ubahemail> {
   void initState() {
     super.initState();
     checkLogin();
-    // Listener: aktifkan tombol jika kedua field terisi
+  
     _emailController.addListener(checkFields);
     _passwordController.addListener(checkFields);
   }
 
   void checkFields() {
     setState(() {
-      isEnabled = _emailController.text.isNotEmpty &&
+      isEnabled =
+          _emailController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty;
     });
   }
 
-Future<void> updateEmail() async {
-  if (!mounted) return;
+ Future<bool> updateEmail() async {
+  if (!mounted) return false;
 
   setState(() => isLoading = true);
 
@@ -57,9 +58,11 @@ Future<void> updateEmail() async {
 
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User tidak ditemukan, silakan login ulang")),
+        const SnackBar(
+          content: Text("User tidak ditemukan, silakan login ulang"),
+        ),
       );
-      return;
+      return false;
     }
 
     // Konfirmasi password
@@ -69,84 +72,107 @@ Future<void> updateEmail() async {
     );
 
     if (signInRes.user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password salah!")),
-      );
-      setState(() => isLoading = false);
-      return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Password salah!")));
+      return false;
     }
 
-    // Update email di auth
+   
     final updateRes = await supabase.auth.updateUser(
       UserAttributes(email: newEmail),
-      );
+      emailRedirectTo: "fokusku://login",     
+    );
 
     if (updateRes.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal memperbarui email")),
       );
-      setState(() => isLoading = false);
-      return;
+      return false;
     }
 
-    // Update juga di tabel users (opsional, untuk UI)
-    await supabase.from('users').update({'email': newEmail}).eq('id', currentUser.id);
-
-    // Tampilkan notifikasi verifikasi
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          "Silakan cek inbox Anda untuk verifikasi email.",
+          "Link verifikasi telah dikirim. Silakan periksa email baru Anda.",
         ),
         duration: Duration(seconds: 5),
       ),
     );
 
-    Navigator.pop(context, true); // kembali ke halaman sebelumnya
+    await Future.delayed(const Duration(milliseconds: 800));
 
+    return true;
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Terjadi kesalahan: $e")),
-    );
+    String errorMessage = "Terjadi kesalahan, coba lagi.";
+    final errorText = e.toString();
+
+    if (errorText.contains("Invalid login credentials") ||
+        errorText.contains("Invalid credentials")) {
+      errorMessage = "Password yang Anda masukkan salah.";
+    } else if (errorText.contains("Email rate limit")) {
+      errorMessage = "Terlalu banyak percobaan. Coba lagi beberapa menit.";
+    } else if (errorText.contains("Unable to validate email address")) {
+      errorMessage = "Format email tidak valid.";
+    } else if (errorText.contains("Email address already in use")) {
+      errorMessage = "Email ini sudah digunakan oleh akun lain.";
+    }
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(errorMessage)));
+
+    return false;
   } finally {
     if (mounted) setState(() => isLoading = false);
   }
 }
 
 
+  void logout() async {
+    try {
+      await authservice.signOut();
+
+      if (!mounted) return;
+
+     Navigator.pushReplacementNamed(
+  context,
+  "/Masuk",
+ 
+);
+
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal logout: $e")));
+      }
+    }
+  }
 
   void checkLogin() {
     if (user == null) {
-    
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, "/Masuk");
       });
       return;
     }
 
-    
     userId = user!.id;
     loadUserData();
   }
 
+  void loadUserData() async {
 
-   void loadUserData() async {
-  if (userId == null) return;
+    final authUser = Supabase.instance.client.auth.currentUser;
+      if (authUser == null) return;
 
-  final data = await akunservice.getCompleteUserData(userId!);
-  
- 
-
-
-  if (mounted) {
-    setState(() {
-      emailUser = data?['email'] ?? "";
-      
-    });
+    if (mounted) {
+      setState(() {
+        emailUser = authUser.email ?? "";
+      });
+    }
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -158,9 +184,10 @@ Future<void> updateEmail() async {
         title: Text(
           "Ubah Email",
           style: GoogleFonts.inter(
-              color: const Color(0xff293329),
-              fontSize: 20,
-              fontWeight: FontWeight.w500),
+            color: const Color(0xff293329),
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         centerTitle: true,
       ),
@@ -197,31 +224,42 @@ Future<void> updateEmail() async {
                       fillColor: Colors.white,
                       hintText: emailUser,
                       hintStyle: GoogleFonts.inter(
-                          color: const Color.fromARGB(255, 165, 165, 165)),
+                        color: const Color.fromARGB(255, 165, 165, 165),
+                      ),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15)),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 148, 150, 147)),
+                          color: Color.fromARGB(255, 148, 150, 147),
+                        ),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 68, 161, 68)),
+                          color: Color.fromARGB(255, 68, 161, 68),
+                        ),
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
                     cursorColor: const Color.fromARGB(255, 68, 161, 68),
+validator: (value) {
+  if (value == null || value.isEmpty) {
+    return "Email tidak boleh kosong";
+  }
 
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Email tidak boleh kosong";
-                      }
-                      if (!value.contains("@gmail.com")) {
-                        return "Email harus mengandung @gmail.com";
-                      }
-                      return null;
-                    },
+  // Regex lengkap & aman untuk validasi email
+  final emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+  );
+
+  if (!emailRegex.hasMatch(value)) {
+    return "Format email tidak valid";
+  }
+
+  return null;
+},
+
                   ),
 
                   const SizedBox(height: 20),
@@ -236,19 +274,23 @@ Future<void> updateEmail() async {
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
-                      
+
                       hintStyle: GoogleFonts.inter(
-                          color: const Color.fromARGB(255, 165, 165, 165)),
+                        color: const Color.fromARGB(255, 165, 165, 165),
+                      ),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15)),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 148, 150, 147)),
+                          color: Color.fromARGB(255, 148, 150, 147),
+                        ),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 68, 161, 68)),
+                          color: Color.fromARGB(255, 68, 161, 68),
+                        ),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       errorMaxLines: 2,
@@ -274,12 +316,46 @@ Future<void> updateEmail() async {
                   Center(
                     child: ElevatedButton(
                       onPressed: isEnabled && !isLoading
-                          ? () {
+                          ? () async {
                               if (_formKey.currentState!.validate()) {
-                                updateEmail();
+                                bool? konfirmasi = await showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      backgroundColor: Colors.white,
+                                      title: const Text("Konfirmasi"),
+                                      content: const Text(
+                                        "Anda yakin ingin mengubah email? Anda akan logout setelah ini.",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text("Batal"),
+                                          onPressed: () {
+                                            Navigator.pop(context, false);
+                                          },
+                                        ),
+                                        ElevatedButton(
+                                          child: const Text("Ya"),
+                                          onPressed: () {
+                                            Navigator.pop(context, true);
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (konfirmasi == true) {
+                                  bool sukses = await updateEmail();
+                                  if (sukses) {
+                                    logout();
+                                  }
+                                }
+
                               }
                             }
                           : null,
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isEnabled
                             ? const Color(0xFF52B755)
@@ -299,9 +375,11 @@ Future<void> updateEmail() async {
                               ),
                             )
                           : Text(
-                              "Simpan",
+                              "Ubah",
                               style: GoogleFonts.inter(
-                                  fontSize: 24, color: Colors.white),
+                                fontSize: 24,
+                                color: Colors.white,
+                              ),
                             ),
                     ),
                   ),

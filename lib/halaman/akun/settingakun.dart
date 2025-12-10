@@ -82,7 +82,7 @@ class _SettingakunState extends State<Settingakun> {
           children: [
             const  SizedBox(height: 45,),
        
-            // FOTO PROFIL
+           
                 const CircleAvatar(
                   radius: 60,
                   backgroundImage: AssetImage("assets/images/logo.png"),
@@ -90,7 +90,7 @@ class _SettingakunState extends State<Settingakun> {
        
                 const SizedBox(height: 30),
        
-       // === CONTAINER MENU PENGATURAN ===
+      
        Container(
          width: double.infinity,
          decoration: BoxDecoration(

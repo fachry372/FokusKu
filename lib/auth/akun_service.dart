@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AkunService {
   final supabase = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Upload file ke supabase storage
   Future<String?> uploadProfileImage(File file, String userId) async {
@@ -59,72 +60,73 @@ class AkunService {
   }
 
  
-//   Future<String?> getUserEmail(String userId) async {
-//   try {
-//     return Supabase.instance.client.auth.currentUser?.email;
-//   } catch (e) {
-//     print("mengambil email error: $e");
-//     return null;
-//   }
-// }
-
-
-//   /// Ambil data lengkap (nama, image, email)
-//   Future<Map<String, dynamic>?> getCompleteUserData(String userId) async {
-//     try {
-//       final profile = await getUserProfile(userId);
-//       final email = await getUserEmail(userId);
-
-//       if (profile == null) return null;
-
-//       return {
-//         'nama': profile['nama'],
-//         'image': profile['image'],
-//         'email': email,
-//       };
-//     } catch (e) {
-//       print("gagal mendapatkan user error: $e");
-//       return null;
-//     }
-//   }
-
-/// Ambil email user dari tabel users
-Future<String?> getUserEmail(String userId) async {
+ Future<String?> getUserEmail(String userId) async {
   try {
-    final response = await Supabase.instance.client
-        .from('users')
-        .select('email')
-        .eq('id', userId)
-        .single(); // ambil 1 row
-
-    // response berbentuk Map<String, dynamic>
-    return response['email'] as String?;
+    final user = Supabase.instance.client.auth.currentUser;
+    return user?.email;
   } catch (e) {
     print("mengambil email error: $e");
     return null;
   }
 }
 
-/// Ambil data lengkap (nama, image, email) dari tabel users
-Future<Map<String, dynamic>?> getCompleteUserData(String userId) async {
-  try {
-    final profile = await Supabase.instance.client
-        .from('users')
-        .select('nama, image, email')
-        .eq('id', userId)
-        .single();
 
+
+  Future<Map<String, dynamic>?> getCompleteUserData(String userId) async {
+  try {
+    final profile = await getUserProfile(userId);
+    final authUser = Supabase.instance.client.auth.currentUser;
+
+    if (profile == null || authUser == null) return null;
 
     return {
       'nama': profile['nama'],
       'image': profile['image'],
-      'email': profile['email'],
+      'email': authUser.email,  
     };
   } catch (e) {
     print("gagal mendapatkan user error: $e");
     return null;
   }
 }
+
+
+// Future<String?> getUserEmail(String userId) async {
+//   try {
+//     final response = await Supabase.instance.client
+//         .from('users')
+//         .select('email')
+//         .eq('id', userId)
+//         .single(); // ambil 1 row
+
+//     // response berbentuk Map<String, dynamic>
+//     return response['email'] as String?;
+//   } catch (e) {
+//     print("mengambil email error: $e");
+//     return null;
+//   }
+// }
+
+// /// Ambil data lengkap (nama, image, email) dari tabel users
+// Future<Map<String, dynamic>?> getCompleteUserData(String userId) async {
+//   try {
+//     final profile = await Supabase.instance.client
+//         .from('users')
+//         .select('nama, image, email')
+//         .eq('id', userId)
+//         .single();
+
+
+//     return {
+//       'nama': profile['nama'],
+//       'image': profile['image'],
+//       'email': profile['email'],
+//     };
+//   } catch (e) {
+//     print("gagal mendapatkan user error: $e");
+//     return null;
+//   }
+// }
 
 
   Future<int> getTotalWaktuFokus(String userId) async {
@@ -216,6 +218,18 @@ Future<bool> ubahNama(String userId, String newName) async {
       return false;
     }
   }
+
+  Future<void> sendEmailUpdateLink({
+  required String newEmail,
+}) async {
+  await _supabase.auth.updateUser(
+    UserAttributes(
+      email: newEmail,
+    ),
+    emailRedirectTo: "fokusku://login",
+  );
+}
+
 
 
 }

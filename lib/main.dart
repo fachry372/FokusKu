@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:fokusku/halaman/navbar.dart';
 import 'package:fokusku/izinoverlay/overlay.dart';
@@ -46,12 +47,29 @@ void main() async {
     }
   });
 
+  initAppLinks();
+
    runApp(
     ChangeNotifierProvider(
       create: (_) => TimerService(), 
       child: const MyApp(),
     ),
   );
+}
+
+void initAppLinks() {
+  AppLinks().uriLinkStream.listen((uri) {
+    if (uri.host == "login") {
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/Masuk', (_) => false);
+
+      final ctx = navigatorKey.currentContext;
+      if (ctx != null) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          const SnackBar(content: Text("Email berhasil diperbarui!")),
+        );
+      }
+    }
+  });
 }
 
 

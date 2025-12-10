@@ -38,13 +38,24 @@ void login() async {
   final password = _passwordController.text.trim();
 
   try {
-    await authservice.signInWithEmailPassword(email, password);
+  await authservice.signInWithEmailPassword(email, password);
 
-    if (!mounted) return;
+  if (!mounted) return;
 
-    
-    Navigator.pushReplacementNamed(context, "/home");
-  } catch (e) {
+  ScaffoldMessenger.of(context).clearSnackBars();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text("Login berhasil!"),
+     
+      duration: Duration(seconds: 1),
+    ),
+  );
+
+  // // beri jeda biar snackbarnya kelihatan
+  // await Future.delayed(Duration(milliseconds: 800));
+
+  Navigator.pushReplacementNamed(context, "/home");
+} catch (e) {
     if (!mounted) return;
 
       String errorMessage;
@@ -69,6 +80,7 @@ void login() async {
 
 
 
+
   bool isenabled = false;
  
   
@@ -81,11 +93,14 @@ void login() async {
     _passwordController.addListener(checkform);
   }
 
+
+
   void checkform () {
     setState(() {
       isenabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
     });
   }
+
 
 
   @override
