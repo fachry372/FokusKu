@@ -68,50 +68,70 @@ class _KoleksiState extends State<Koleksi> {
   final data = await getFocusData(daily: daily);
 
   if (daily) {
-    // Reset
-    dailyHourMinutes = List.filled(24, 0);
+   // Reset
+dailyHourMinutes = List.filled(24, 0);
 
-    // Masukkan menit per jam (logika bar chart lama)
-    for (var item in data) {
+for (var item in data) {
   if (item['created_at'] is DateTime) {
-    int hour = (item['created_at'] as DateTime).hour;
-    int dur = (item['durasi_fokus'] as num).toInt();
+    final DateTime startTime = item['created_at'] as DateTime;
 
-    while (dur > 0 && hour < 24) {
-      int spaceLeft = 60 - dailyHourMinutes[hour];
-      if (dur <= spaceLeft) {
-        dailyHourMinutes[hour] += dur;
-        dur = 0;
-      } else {
-        dailyHourMinutes[hour] += spaceLeft;
-        dur -= spaceLeft;
-        hour += 1; // pindah ke jam berikutnya
-      }
+    final int durasiFokus = (item['durasi_fokus'] as num).toInt();
+    final int jumlahSesi = (item['jumlah_sesi'] as num?)?.toInt() ?? 1;
+
+    int totalMinutes = durasiFokus * jumlahSesi;
+
+    int hour = startTime.hour;
+    int minute = startTime.minute;
+
+    // Sisa menit di jam pertama
+    int spaceInFirstHour = 60 - minute;
+
+    // Masukkan ke jam pertama
+    int used = totalMinutes < spaceInFirstHour
+        ? totalMinutes
+        : spaceInFirstHour;
+
+    dailyHourMinutes[hour] += used;
+    totalMinutes -= used;
+    hour++;
+
+    // Lanjut ke jam berikutnya
+    while (totalMinutes > 0 && hour < 24) {
+      int usedInHour = totalMinutes >= 60 ? 60 : totalMinutes;
+      dailyHourMinutes[hour] += usedInHour;
+      totalMinutes -= usedInHour;
+      hour++;
     }
   }
 }
 
 
+
     setState(() => loadingDailyChart = false);
-  } else {
-    // Mingguan
-    weeklyFocus = List.filled(7, 0);
+ } else {
+  // Mingguan 
+  weeklyFocus = List.filled(7, 0);
 
-    for (var item in data) {
-      final dt = item['created_at'];
-      final dur = item['durasi_fokus'] ?? 0;
-      final intDur = (dur is int) ? dur : (dur as num).toInt();
+  for (var item in data) {
+    final dt = item['created_at'];
 
+    final int durasiFokus =
+        (item['durasi_fokus'] as num?)?.toInt() ?? 0;
 
+    final int jumlahSesi =
+        (item['jumlah_sesi'] as num?)?.toInt() ?? 1;
 
-      if (dt is DateTime) {
-        final dayIndex = (dt.weekday - 1); // Senin = 0
-        weeklyFocus[dayIndex] += intDur;
-      }
+    final int totalMenit = durasiFokus * jumlahSesi;
+
+    if (dt is DateTime) {
+      final int dayIndex = dt.weekday - 1; // Senin = 0
+      weeklyFocus[dayIndex] += totalMenit;
     }
-
-    setState(() => loadingWeeklyChart = false);
   }
+
+  setState(() => loadingWeeklyChart = false);
+}
+
 }
 
 
@@ -121,11 +141,11 @@ class _KoleksiState extends State<Koleksi> {
 
     var query = Supabase.instance.client
         .from('timer')
-        .select('durasi_fokus, created_at')
+        .select('durasi_fokus, jumlah_sesi, created_at')
         .eq('user_id', user.id);
 
     final today = DateTime.now();
-
+  
     if (daily) {
       final start = DateTime(today.year, today.month, today.day);
       final end = DateTime(today.year, today.month, today.day, 23, 59, 59);

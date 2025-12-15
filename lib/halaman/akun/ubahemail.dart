@@ -31,7 +31,7 @@ class _UbahemailState extends State<Ubahemail> {
   void initState() {
     super.initState();
     checkLogin();
-  
+
     _emailController.addListener(checkFields);
     _passwordController.addListener(checkFields);
   }
@@ -44,90 +44,90 @@ class _UbahemailState extends State<Ubahemail> {
     });
   }
 
- Future<bool> updateEmail() async {
-  if (!mounted) return false;
+  Future<bool> updateEmail() async {
+    if (!mounted) return false;
 
-  setState(() => isLoading = true);
+    setState(() => isLoading = true);
 
-  final newEmail = _emailController.text.trim();
-  final password = _passwordController.text.trim();
+    final newEmail = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-  try {
-    final supabase = Supabase.instance.client;
-    final currentUser = supabase.auth.currentUser;
+    try {
+      final supabase = Supabase.instance.client;
+      final currentUser = supabase.auth.currentUser;
 
-    if (currentUser == null) {
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("User tidak ditemukan, silakan login ulang"),
+          ),
+        );
+        return false;
+      }
+
+     
+      final signInRes = await supabase.auth.signInWithPassword(
+        email: currentUser.email!,
+        password: password,
+      );
+
+      if (signInRes.user == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Password salah!")));
+        return false;
+      }
+
+      final updateRes = await supabase.auth.updateUser(
+        UserAttributes(email: newEmail),
+        emailRedirectTo: "fokusku://login",
+      );
+
+      if (updateRes.user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal memperbarui email")),
+        );
+        return false;
+      }
+
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("User tidak ditemukan, silakan login ulang"),
+          content: Text(
+            "Link verifikasi telah dikirim. Silakan periksa email Anda.",
+          ),
+          duration: Duration(seconds: 5),
         ),
       );
+
+      // await Future.delayed(const Duration(milliseconds: 800));
+
+      return true;
+    } catch (e) {
+      String errorMessage = "Terjadi kesalahan, coba lagi.";
+      final errorText = e.toString();
+
+      if (errorText.contains("Invalid login credentials") ||
+          errorText.contains("Invalid credentials")) {
+        errorMessage = "Password yang Anda masukkan salah.";
+      } else if (errorText.contains("Email rate limit")) {
+        errorMessage = "Terlalu banyak percobaan. Coba lagi beberapa menit.";
+      } else if (errorText.contains("Unable to validate email address")) {
+        errorMessage = "Format email tidak valid.";
+      } else if (errorText.contains("Email address already in use")) {
+        errorMessage = "Email ini sudah digunakan oleh akun lain.";
+      }
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+
       return false;
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-
-    // Konfirmasi password
-    final signInRes = await supabase.auth.signInWithPassword(
-      email: currentUser.email!,
-      password: password,
-    );
-
-    if (signInRes.user == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Password salah!")));
-      return false;
-    }
-
-   
-    final updateRes = await supabase.auth.updateUser(
-      UserAttributes(email: newEmail),
-      emailRedirectTo: "fokusku://login",     
-    );
-
-    if (updateRes.user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal memperbarui email")),
-      );
-      return false;
-    }
-
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Link verifikasi telah dikirim. Silakan periksa email baru Anda.",
-        ),
-        duration: Duration(seconds: 5),
-      ),
-    );
-
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    return true;
-  } catch (e) {
-    String errorMessage = "Terjadi kesalahan, coba lagi.";
-    final errorText = e.toString();
-
-    if (errorText.contains("Invalid login credentials") ||
-        errorText.contains("Invalid credentials")) {
-      errorMessage = "Password yang Anda masukkan salah.";
-    } else if (errorText.contains("Email rate limit")) {
-      errorMessage = "Terlalu banyak percobaan. Coba lagi beberapa menit.";
-    } else if (errorText.contains("Unable to validate email address")) {
-      errorMessage = "Format email tidak valid.";
-    } else if (errorText.contains("Email address already in use")) {
-      errorMessage = "Email ini sudah digunakan oleh akun lain.";
-    }
-
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(errorMessage)));
-
-    return false;
-  } finally {
-    if (mounted) setState(() => isLoading = false);
   }
-}
-
 
   void logout() async {
     try {
@@ -135,12 +135,7 @@ class _UbahemailState extends State<Ubahemail> {
 
       if (!mounted) return;
 
-     Navigator.pushReplacementNamed(
-  context,
-  "/Masuk",
- 
-);
-
+      Navigator.pushReplacementNamed(context, "/Masuk");
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -163,15 +158,111 @@ class _UbahemailState extends State<Ubahemail> {
   }
 
   void loadUserData() async {
-
     final authUser = Supabase.instance.client.auth.currentUser;
-      if (authUser == null) return;
+    if (authUser == null) return;
 
     if (mounted) {
       setState(() {
         emailUser = authUser.email ?? "";
       });
     }
+  }
+
+  Future<bool?> dialogkonfirmasiemail({
+    required BuildContext context,
+    required String title,
+    required String message,
+    String confirmText = "Ya",
+    String cancelText = "Batal",
+    Color confirmColor = const Color(0xFF52B755),
+    Color cancelColor = const Color.fromARGB(255, 100, 88, 88),
+  }) async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: const Color(0xFFE6F2E6),
+          contentPadding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
+
+          title: Center(
+            child: Text(
+              title,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: const Color(0xFF182E19),
+              ),
+            ),
+          ),
+
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF4E574E),
+                
+              ),
+            ),
+          ),
+
+          actionsPadding: const EdgeInsets.all(20),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cancelColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      cancelText,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: confirmColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      confirmText,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -243,23 +334,22 @@ class _UbahemailState extends State<Ubahemail> {
                       ),
                     ),
                     cursorColor: const Color.fromARGB(255, 68, 161, 68),
-validator: (value) {
-  if (value == null || value.isEmpty) {
-    return "Email tidak boleh kosong";
-  }
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Email tidak boleh kosong";
+                      }
 
-  // Regex lengkap & aman untuk validasi email
-  final emailRegex = RegExp(
-    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-  );
+                      // Regex lengkap & aman untuk validasi email
+                      final emailRegex = RegExp(
+                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                      );
 
-  if (!emailRegex.hasMatch(value)) {
-    return "Format email tidak valid";
-  }
+                      if (!emailRegex.hasMatch(value)) {
+                        return "Format email tidak valid";
+                      }
 
-  return null;
-},
-
+                      return null;
+                    },
                   ),
 
                   const SizedBox(height: 20),
@@ -318,40 +408,20 @@ validator: (value) {
                       onPressed: isEnabled && !isLoading
                           ? () async {
                               if (_formKey.currentState!.validate()) {
-                                bool? konfirmasi = await showDialog(
+                                bool? konfirmasi = await dialogkonfirmasiemail(
                                   context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      backgroundColor: Colors.white,
-                                      title: const Text("Konfirmasi"),
-                                      content: const Text(
-                                        "Anda yakin ingin mengubah email? Anda akan logout setelah ini.",
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text("Batal"),
-                                          onPressed: () {
-                                            Navigator.pop(context, false);
-                                          },
-                                        ),
-                                        ElevatedButton(
-                                          child: const Text("Ya"),
-                                          onPressed: () {
-                                            Navigator.pop(context, true);
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                  title: "Ubah email ?",
+                                  message:
+                                      "Anda yakin ingin mengubah email? Anda akan logout setelah ini.",
+                                  confirmText: "Ya",
+                                  cancelText: "Batal",
                                 );
-
                                 if (konfirmasi == true) {
                                   bool sukses = await updateEmail();
                                   if (sukses) {
                                     logout();
                                   }
                                 }
-
                               }
                             }
                           : null,

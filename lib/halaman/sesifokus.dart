@@ -22,12 +22,17 @@ class Sesifokus extends StatefulWidget {
 class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
   late TimerService timer;
   bool rewardShown = false;
+  bool sessionCompleted = false;
+  DateTime? sessionStartTime;
+
 
    @override
   void initState() {
     super.initState();
      WidgetsBinding.instance.addObserver(this);
     timer = widget.timerService;
+    sessionStartTime = DateTime.now();
+    sessionCompleted = false;
     timer.startPomodoro();
     rewardShown= false;
     timer.addListener(_checkReward);
@@ -103,11 +108,12 @@ void _checkReward() {
       timerService: timer,
     );
 
-   
-    showRewardDialog(context, timer);
+   showRewardDialog(context, timer);
+
+    sessionCompleted = true;
 
     simpantimer();
-   
+
     timer.tunggureward = false;
 
     

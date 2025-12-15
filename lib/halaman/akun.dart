@@ -22,6 +22,7 @@ class _AkunState extends State<Akun> {
   
   String namaUser = "";
   String emailUser = "";
+  String? imageUrl;
 
   int totalFokus = 0;
   int rataRataFokus = 0;   
@@ -34,6 +35,7 @@ class _AkunState extends State<Akun> {
     checkLogin();
      }
 
+   
   void checkLogin() {
     if (user == null) {
       // kalau tidak login, arahkan ke halaman Masuk
@@ -64,7 +66,104 @@ class _AkunState extends State<Akun> {
     }
   }
 
-   void loadUserData() async {
+  Future<void> showLogoutPopup(BuildContext context) async {
+  final result = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: const Color(0xFFE6F2E6),
+        contentPadding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
+
+        title: Center(
+          child: Text(
+            "Konfirmasi Keluar",
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: const Color(0xFF182E19),
+            ),
+          ),
+        ),
+
+        content: Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            "Apakah kamu yakin ingin keluar ?",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF4E574E),
+            ),
+          ),
+        ),
+
+        actionsPadding: const EdgeInsets.all(20),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 100, 88, 88),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    "Batal",
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff871A1D), 
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    "Keluar",
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+
+  if (result == true) {
+    logout();
+  }
+}
+
+
+
+
+ void loadUserData() async {
   if (userId == null) return;
 
   final data = await akunService.getCompleteUserData(userId!);
@@ -72,18 +171,38 @@ class _AkunState extends State<Akun> {
   final rata = await akunService.getRataRataPerHari(userId!);
   final hewan = await akunService.getTotalHewan(userId!);
 
+ 
+  final storage = Supabase.instance.client.storage.from('image');
+  final path = "profile_$userId.jpg";
+
+  String? finalImageUrl;
+
+  try {
+    
+    await storage.download(path);
+    
+   
+    final directUrl = storage.getPublicUrl(path);
+    finalImageUrl = "$directUrl?v=${DateTime.now().millisecondsSinceEpoch}";
+  } catch (e) {
+    
+    finalImageUrl = null;
+  }
 
   if (mounted) {
     setState(() {
       namaUser = data?['nama'] ?? "";
       emailUser = data?['email'] ?? "";
 
-      totalFokus = total; // menit
-      rataRataFokus = rata.round(); // menit per hari
-       totalHewan = hewan;
+      totalFokus = total;
+      rataRataFokus = rata.round();
+      totalHewan = hewan;
+
+      imageUrl = finalImageUrl; 
     });
   }
 }
+
 
 
   static const Color teks = Color(0xff182E19);
@@ -107,11 +226,16 @@ class _AkunState extends State<Akun> {
               ),
               const SizedBox(height: 30),
 
-              // FOTO PROFIL
-              const CircleAvatar(
-                radius: 60,
-                backgroundImage: AssetImage("assets/images/logo.png"),
-              ),
+              
+             CircleAvatar(
+                             backgroundColor: Colors.transparent,
+                              radius: 50,
+                              backgroundImage:
+                                  imageUrl != null && imageUrl!.isNotEmpty
+                                  ? NetworkImage(imageUrl!)
+                                  : const AssetImage("assets/images/logo.png")
+                                        as ImageProvider,
+                            ),
 
               const SizedBox(height: 10),
 
@@ -154,7 +278,7 @@ class _AkunState extends State<Akun> {
 
               const SizedBox(height: 20),
 
-              // === RINGKASAN ===
+              
               Padding(
                 padding: const EdgeInsets.only(left: 15.0, right: 15.0),
                 child: Row(
@@ -205,11 +329,11 @@ class _AkunState extends State<Akun> {
 
               const SizedBox(height: 20),
 
-              // === LAINNYA ===
+            
               Padding(
-                padding: const EdgeInsets.only(left: 15.0, right: 15),
+                padding: const EdgeInsets.only(left: 15.0, right: 15,),
                 child: Container(
-                  height: 135,
+                  
                   width: 375,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -231,22 +355,51 @@ class _AkunState extends State<Akun> {
                       _buildMenuItem(
                         title: "Tentang Kami",
                         leadingSvg: "assets/icons/about.svg",
+                        isLast: true,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => About()),
                         ),
                       ),
-                      _buildMenuItem(
-                        title: "Keluar",
-                        leadingSvg: "assets/icons/logout.svg",
-                        onTap: () => logout(),
-                        isRed: true,
-                        isLast: true,
-                      ),
+                     
                     ],
                   ),
                 ),
+                
               ),
+              const SizedBox(height: 25,),
+              Padding(
+              padding: const EdgeInsets.only(left: 15.0, right: 15),
+              child: SizedBox(
+                width: 375,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: () {
+                    showLogoutPopup(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white, 
+                    elevation: 0,                 
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(
+                        color: Color(0xff871A1D),  
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    "Keluar",
+                    style: GoogleFonts.inter(
+                      color: const Color(0xff871A1D),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
             ],
           ),
         ),
@@ -254,7 +407,7 @@ class _AkunState extends State<Akun> {
     );
   }
 
-  // Card Ringkasan (pakai SVG)
+  
   Widget _buildSummaryCard({
     required String svgPath,
     required String title,
@@ -269,7 +422,7 @@ class _AkunState extends State<Akun> {
       ),
       child: Column(
         children: [
-          SvgPicture.asset(svgPath, height: 35),
+          SvgPicture.asset(svgPath, height: 35,color: Color(0xff73A373),),
           const SizedBox(height: 5),
           Text(
             title,
@@ -297,14 +450,14 @@ class _AkunState extends State<Akun> {
   Widget _buildMenuItem({
     required String title,
     required VoidCallback onTap,
-    String? leadingSvg, // ← SVG icon kiri (opsional)
+    String? leadingSvg, 
     bool isRed = false,
     bool isLast = false,
   }) {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           border: isLast
               ? null

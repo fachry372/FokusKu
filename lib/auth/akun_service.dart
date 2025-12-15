@@ -5,26 +5,33 @@ class AkunService {
   final supabase = Supabase.instance.client;
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  /// Upload file ke supabase storage
-  Future<String?> uploadProfileImage(File file, String userId) async {
-    try {
-      final fileName = "profile_$userId.jpg";
+  
+Future<String?> uploadProfileImage(
+  File file,
+  String userId,
+) async {
+  try {
+    // Nama file tetap, agar selalu replace
+    final fileName = "profile_$userId.jpg";
 
-      // upload ke storage bucket "profile"
-      await supabase.storage
-          .from('profile')
-          .upload(fileName, file, fileOptions: FileOptions(upsert: true));
+    await supabase.storage
+        .from('image')
+        .upload(
+          fileName,
+          file,
+          fileOptions: FileOptions(upsert: true), // ⬅ auto replace file lama
+        );
 
-      // ambil URL publik
-      final imageUrl =
-          supabase.storage.from('profile').getPublicUrl(fileName);
+    // Ambil public URL
+    final imageUrl = supabase.storage.from('image').getPublicUrl(fileName);
 
-      return imageUrl;
-    } catch (e) {
-      print("Upload error: $e");
-      return null;
-    }
+    return imageUrl;
+  } catch (e) {
+    print("Upload error: $e");
+    return null;
   }
+}
+
 
   /// Update kolom image di tabel users
   Future<bool> updateUserImage(String userId, String imageUrl) async {
@@ -42,8 +49,6 @@ class AkunService {
   }
 
  
-
-  /// Ambil nama & image dari tabel public.users
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     try {
       final response = await supabase
@@ -209,7 +214,7 @@ Future<bool> ubahNama(String userId, String newName) async {
 
       // 2. Update password baru
       await supabase.auth.updateUser(
-        AdminUserAttributes(password: newPassword),
+        UserAttributes(password: newPassword),
       );
 
       return true;

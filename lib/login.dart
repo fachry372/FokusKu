@@ -51,7 +51,6 @@ void login() async {
     ),
   );
 
-  // // beri jeda biar snackbarnya kelihatan
   // await Future.delayed(Duration(milliseconds: 800));
 
   Navigator.pushReplacementNamed(context, "/home");
@@ -61,7 +60,7 @@ void login() async {
       String errorMessage;
 
   if (e.toString().contains("Invalid login credentials")) {
-    errorMessage = "Login gagal ,Email atau kata sandi salah.";
+    errorMessage = "Login gagal, email atau kata sandi salah.";
   } else {
     errorMessage = "Terjadi kesalahan: $e";
   }
