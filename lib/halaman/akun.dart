@@ -378,20 +378,16 @@ class _AkunState extends State<Akun> {
                     showLogoutPopup(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white, 
+                    backgroundColor:Color(0xff871A1D),  
                     elevation: 0,                 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(
-                        color: Color(0xff871A1D),  
-                        width: 1.5,
-                      ),
                     ),
                   ),
                   child: Text(
                     "Keluar",
                     style: GoogleFonts.inter(
-                      color: const Color(0xff871A1D),
+                      color: const Color.fromARGB(255, 255, 255, 255),
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),

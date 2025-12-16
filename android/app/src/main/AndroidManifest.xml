@@ -1,7 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"/>
+
+
     <application
         android:label="Fokusku"
         android:name="${applicationName}"
@@ -13,6 +16,29 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="explanation_for_special_use"/>
         </service>
+
+        <service
+    android:name=".FocusService"
+    android:exported="false"
+    android:foregroundServiceType="specialUse"/>
+
+   <service
+    android:name=".FocusAccessibilityService"
+    android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+    android:exported="false"
+    android:enabled="true">
+
+
+    <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService"/>
+    </intent-filter>
+
+    <meta-data
+        android:name="android.accessibilityservice"
+        android:resource="@xml/accessibility_config"/>
+</service>
+
+
 
        
         <activity

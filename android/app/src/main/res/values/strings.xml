@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Nama aplikasi -->
+    <string name="app_name">Fokusku</string>
+
+    <!-- Deskripsi accessibility service -->
+    <string name="accessibility_desc">
+        Digunakan untuk mendeteksi aplikasi yang sedang dibuka selama sesi fokus.
+    </string>
+</resources>

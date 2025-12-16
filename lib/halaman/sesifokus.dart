@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fokusku/auth/riwayatkoleksi.dart';
+import 'package:fokusku/izinoverlay/focus_service.dart';
 import 'package:fokusku/tamandantelur/tamandantelurfokus.dart';
 import 'package:fokusku/tamandantelur/tamanteluristirahat.dart';
 import 'package:fokusku/timer/timer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
+import 'package:fokusku/izinoverlay/app_detector.dart';
+
 
 
 
@@ -24,11 +28,28 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
   bool rewardShown = false;
   bool sessionCompleted = false;
   DateTime? sessionStartTime;
+  bool focusActive = true;
+bool overlayShown = false;
+Timer? appCheckTimer;
+String? launcherPackage;
+bool homeTransition = false;
+String? lastApp;
+DateTime? lastAppChangeTime;
+Timer? overlayDelayTimer;
+String? pendingApp;
+int _overlayRequestId = 0;
+String? lastStableApp;
+bool isInHome = true;
+DateTime? lastForegroundChangeTime;
+
+
+final String myPackage = "com.example.fokusku"; 
 
 
    @override
   void initState() {
     super.initState();
+   
      WidgetsBinding.instance.addObserver(this);
     timer = widget.timerService;
     sessionStartTime = DateTime.now();
@@ -37,44 +58,147 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
     rewardShown= false;
     timer.addListener(_checkReward);
 
+    _initFocusSystem();
   }
 
-  
+  Future<void> _initFocusSystem() async {
+  launcherPackage = await AppDetector.getLauncherPackage();
+
+  await AppDetector.ensurePermission();
+  await FocusService.start();
+
+  startAppChecker();
+}
+
+void startAppChecker() {
+  appCheckTimer?.cancel();
+
+  appCheckTimer = Timer.periodic(
+    const Duration(milliseconds: 500),
+    (_) async {
+      if (!focusActive) return;
+
+      final currentApp = await AppDetector.getForegroundApp();
+      if (currentApp == null || launcherPackage == null) return;
+
+       
+      if (currentApp == launcherPackage) {
+        isInHome = true;
+        lastStableApp = null;
+
+        _overlayRequestId++;
+        overlayDelayTimer?.cancel();
+
+        await hideFocusOverlay();
+        return;
+      }
+
+      
+      if (currentApp == myPackage) {
+        isInHome = false;
+        lastStableApp = null;
+
+        _overlayRequestId++;
+        overlayDelayTimer?.cancel();
+
+        await hideFocusOverlay();
+        return;
+      }
+
+     
+      if (isInHome) {
+        isInHome = false;
+        lastStableApp = currentApp;
+        return;
+      }
+
+    
+     final now = DateTime.now();
+
+if (lastStableApp == currentApp) {
+ 
+  if (lastForegroundChangeTime != null &&
+      now.difference(lastForegroundChangeTime!).inSeconds > 5) {
+    await hideFocusOverlay();
+  }
+  return;
+}
+
+
+    
+      lastStableApp = currentApp;
+      pendingApp = currentApp;
+
+      _overlayRequestId++;
+      final requestId = _overlayRequestId;
+
+      overlayDelayTimer?.cancel();
+      overlayDelayTimer = Timer(
+        const Duration(milliseconds: 1000),
+        () async {
+          if (!focusActive) return;
+          if (requestId != _overlayRequestId) return;
+
+          final recheck = await AppDetector.getForegroundApp();
+          if (recheck == pendingApp &&
+              recheck != launcherPackage &&
+              recheck != myPackage) {
+            await showFocusOverlay();
+          }
+        },
+      );
+    },
+  );
+}
+
 
    @override
-  void dispose() {
-     WidgetsBinding.instance.removeObserver(this);
-    timer.removeListener(_checkReward);
-    timer.stop();
-     super.dispose();
-  }
+void dispose() {
+  WidgetsBinding.instance.removeObserver(this);
+
+  overlayDelayTimer?.cancel();
+  appCheckTimer?.cancel();
+
+  hideFocusOverlay();
+  focusActive = false;
+
+  timer.removeListener(_checkReward);
+  timer.stop();
+  FocusService.stop();
+
+  super.dispose();
+}
+
 
   
 @override
-void didChangeAppLifecycleState(AppLifecycleState state) async {
- 
-  if (state == AppLifecycleState.inactive ||
-      state == AppLifecycleState.paused ||
-      state == AppLifecycleState.detached) {
-
-  
-    if (!await FlutterOverlayWindow.isPermissionGranted()) {
-      await FlutterOverlayWindow.requestPermission();
-      return;
-    }
-
-    await FlutterOverlayWindow.showOverlay(
-  height: -1,
-  width: -1,
-  alignment: OverlayAlignment.center,
-);
-
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  if (state == AppLifecycleState.detached) {
+    hideFocusOverlay();
   }
+}
 
-  // User kembali ke aplikasi
-  if (state == AppLifecycleState.resumed) {
+
+
+
+Future<void> showFocusOverlay() async {
+  if (overlayShown) return;
+
+  await FlutterOverlayWindow.showOverlay(
+    height: -1,
+    width: -1,
+    enableDrag: false,
+    flag: OverlayFlag.defaultFlag,
+  );
+
+  overlayShown = true;
+}
+
+Future<void> hideFocusOverlay() async {
+  try {
     await FlutterOverlayWindow.closeOverlay();
-  }
+  } catch (_) {}
+  overlayShown = false;
 }
 
 
@@ -293,6 +417,10 @@ void _checkReward() {
               onPressed: () {
                 Navigator.pop(context);   
                 timer.stop();             
+                FocusService.stop();
+focusActive = false;
+appCheckTimer?.cancel();
+hideFocusOverlay();
 
                 
                 if (Navigator.canPop(context)) {
@@ -337,6 +465,11 @@ void _checkReward() {
 
         if (keluar) {
           timer.stop();
+          FocusService.stop();
+focusActive = false;
+appCheckTimer?.cancel();
+hideFocusOverlay();
+
           Navigator.pop(context);
         }
       },
@@ -354,6 +487,11 @@ void _checkReward() {
                       bool keluar = await _konfirmasikeluar();
                       if (keluar) {
                         timer.stop();
+                        FocusService.stop();
+focusActive = false;
+appCheckTimer?.cancel();
+hideFocusOverlay();
+
                         if (!mounted) return;
                           Navigator.pop(context);
                         }
@@ -458,6 +596,11 @@ void _checkReward() {
                         bool keluar = await _konfirmasikeluar();
                         if (keluar) {
                            timer.stop();
+                           FocusService.stop();
+focusActive = false;
+appCheckTimer?.cancel();
+hideFocusOverlay();
+
                            if (!mounted) return;
                            Navigator.pop(context);
                         }

@@ -12,19 +12,19 @@ class Koleksi extends StatefulWidget {
 }
 
 class _KoleksiState extends State<Koleksi> {
-  // State koleksi (card)
+
   List<Map<String, dynamic>> koleksi = [];
   bool loadingKoleksi = true;
 
-  // Chart state
-  List<int> dailyHourMinutes = List.filled(24, 0); // menit per jam (0..23)
-  List<int> dailyBuckets5 = List.filled(5, 0); // jika kamu butuh total per segmen 5 slot
-  List<int> weeklyFocus = List.filled(7, 0); // Sen..Min
+  
+  List<int> dailyHourMinutes = List.filled(24, 0); 
+  List<int> dailyBuckets5 = List.filled(5, 0); 
+  List<int> weeklyFocus = List.filled(7, 0);
 
   bool loadingDailyChart = true;
   bool loadingWeeklyChart = true;
 
-  // UI constants
+  
   static const Color cardBorderColor = Color.fromARGB(255, 117, 211, 140);
   static const Color primaryTextColor = Color(0xff182E19);
   static const Color accentColor = Color(0xFF28AD49);
@@ -36,7 +36,7 @@ class _KoleksiState extends State<Koleksi> {
     loadAllFocus();
   }
 
-  // ------------------- Koleksi (card) -------------------
+  
   Future<void> loadKoleksi() async {
     try {
       final data = await RewardService.getKoleksi();
@@ -45,7 +45,7 @@ class _KoleksiState extends State<Koleksi> {
         loadingKoleksi = false;
       });
     } catch (e) {
-      // tetap set false agar UI tidak macet
+    
       setState(() {
         koleksi = [];
         loadingKoleksi = false;
