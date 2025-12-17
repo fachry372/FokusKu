@@ -72,8 +72,8 @@ class _KoleksiState extends State<Koleksi> {
 dailyHourMinutes = List.filled(24, 0);
 
 for (var item in data) {
-  if (item['created_at'] is DateTime) {
-    final DateTime startTime = item['created_at'] as DateTime;
+  if (item['started_at'] is DateTime) {
+    final DateTime startTime = item['started_at'] as DateTime;
 
     final int durasiFokus = (item['durasi_fokus'] as num).toInt();
     final int jumlahSesi = (item['jumlah_sesi'] as num?)?.toInt() ?? 1;
@@ -113,7 +113,7 @@ for (var item in data) {
   weeklyFocus = List.filled(7, 0);
 
   for (var item in data) {
-    final dt = item['created_at'];
+    final dt = item['started_at'];
 
     final int durasiFokus =
         (item['durasi_fokus'] as num?)?.toInt() ?? 0;
@@ -141,7 +141,7 @@ for (var item in data) {
 
     var query = Supabase.instance.client
         .from('timer')
-        .select('durasi_fokus, jumlah_sesi, created_at')
+        .select('durasi_fokus, jumlah_sesi, started_at')
         .eq('user_id', user.id);
 
     final today = DateTime.now();
@@ -149,7 +149,7 @@ for (var item in data) {
     if (daily) {
       final start = DateTime(today.year, today.month, today.day);
       final end = DateTime(today.year, today.month, today.day, 23, 59, 59);
-      query = query.gte('created_at', start.toIso8601String()).lte('created_at', end.toIso8601String());
+      query = query.gte('started_at', start.toIso8601String()).lte('started_at', end.toIso8601String());
     } else {
       final today = DateTime.now();
 final int weekday = today.weekday; // 1 = Senin
@@ -160,8 +160,8 @@ final weekStart = DateTime(today.year, today.month, today.day)
 final weekEnd = weekStart.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
 
 query = query
-    .gte('created_at', weekStart.toIso8601String())
-    .lte('created_at', weekEnd.toIso8601String());
+    .gte('started_at', weekStart.toIso8601String())
+    .lte('started_at', weekEnd.toIso8601String());
 
     }
 
@@ -172,11 +172,14 @@ query = query
 
     
     for (var item in data) {
-      if (item['created_at'] != null) {
+      if (item['started_at'] != null) {
         try {
-          final utcTime = DateTime.parse(item['created_at']);
-          final wibTime = utcTime.add(const Duration(hours: 7));
-          item['created_at'] = wibTime;
+          // final utcTime = DateTime.parse(item['started_at']);
+          // final wibTime = utcTime.add(const Duration(hours: 7));
+          // item['started_at'] = wibTime;
+          item['started_at'] = DateTime.parse(item['started_at']);
+
+
         } catch (_) {
          
         }
@@ -680,7 +683,7 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
 
                 const SizedBox(height: 15),
 
-                // --- Koleksi cards (tidak diubah) ---
+              
                 Padding(
                   padding: const EdgeInsets.only(right: 0),
                   child: SingleChildScrollView(
@@ -724,7 +727,7 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
 
                 const SizedBox(height: 10),
 
-                // --- Chart area ---
+             
                 (loadingDailyChart && isDailySelected) || (loadingWeeklyChart && !isDailySelected)
                     ? Center(child: CircularProgressIndicator(color: accentColor))
                     : isDailySelected

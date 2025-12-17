@@ -11,6 +11,7 @@ class AccessibilityListener {
       if (call.method == 'onAppChanged') {
         onChanged(call.arguments as String);
       }
-    });
+    }
+    );
   }
 }

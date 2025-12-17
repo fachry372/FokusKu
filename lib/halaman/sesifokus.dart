@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fokusku/auth/riwayatkoleksi.dart';
 import 'package:fokusku/izinoverlay/focus_service.dart';
@@ -9,9 +8,6 @@ import 'package:fokusku/timer/timer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
-import 'package:fokusku/izinoverlay/app_detector.dart';
-
-
 
 
 class Sesifokus extends StatefulWidget {
@@ -28,187 +24,48 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
   bool rewardShown = false;
   bool sessionCompleted = false;
   DateTime? sessionStartTime;
-  bool focusActive = true;
-bool overlayShown = false;
-Timer? appCheckTimer;
-String? launcherPackage;
-bool homeTransition = false;
-String? lastApp;
-DateTime? lastAppChangeTime;
-Timer? overlayDelayTimer;
-String? pendingApp;
-int _overlayRequestId = 0;
-String? lastStableApp;
-bool isInHome = true;
-DateTime? lastForegroundChangeTime;
 
-
-final String myPackage = "com.example.fokusku"; 
-
-
-   @override
+  @override
   void initState() {
     super.initState();
-   
-     WidgetsBinding.instance.addObserver(this);
+
+    WidgetsBinding.instance.addObserver(this);
     timer = widget.timerService;
     sessionStartTime = DateTime.now();
     sessionCompleted = false;
     timer.startPomodoro();
-    rewardShown= false;
+    rewardShown = false;
     timer.addListener(_checkReward);
 
-    _initFocusSystem();
-  }
-
-  Future<void> _initFocusSystem() async {
-  launcherPackage = await AppDetector.getLauncherPackage();
-
-  await AppDetector.ensurePermission();
-  await FocusService.start();
-
-  startAppChecker();
-}
-
-void startAppChecker() {
-  appCheckTimer?.cancel();
-
-  appCheckTimer = Timer.periodic(
-    const Duration(milliseconds: 500),
-    (_) async {
-      if (!focusActive) return;
-
-      final currentApp = await AppDetector.getForegroundApp();
-      if (currentApp == null || launcherPackage == null) return;
-
-       
-      if (currentApp == launcherPackage) {
-        isInHome = true;
-        lastStableApp = null;
-
-        _overlayRequestId++;
-        overlayDelayTimer?.cancel();
-
-        await hideFocusOverlay();
-        return;
-      }
-
-      
-      if (currentApp == myPackage) {
-        isInHome = false;
-        lastStableApp = null;
-
-        _overlayRequestId++;
-        overlayDelayTimer?.cancel();
-
-        await hideFocusOverlay();
-        return;
-      }
-
-     
-      if (isInHome) {
-        isInHome = false;
-        lastStableApp = currentApp;
-        return;
-      }
-
-    
-     final now = DateTime.now();
-
-if (lastStableApp == currentApp) {
- 
-  if (lastForegroundChangeTime != null &&
-      now.difference(lastForegroundChangeTime!).inSeconds > 5) {
-    await hideFocusOverlay();
-  }
-  return;
-}
-
-
-    
-      lastStableApp = currentApp;
-      pendingApp = currentApp;
-
-      _overlayRequestId++;
-      final requestId = _overlayRequestId;
-
-      overlayDelayTimer?.cancel();
-      overlayDelayTimer = Timer(
-        const Duration(milliseconds: 1000),
-        () async {
-          if (!focusActive) return;
-          if (requestId != _overlayRequestId) return;
-
-          final recheck = await AppDetector.getForegroundApp();
-          if (recheck == pendingApp &&
-              recheck != launcherPackage &&
-              recheck != myPackage) {
-            await showFocusOverlay();
-          }
-        },
-      );
-    },
-  );
-}
-
-
-   @override
-void dispose() {
-  WidgetsBinding.instance.removeObserver(this);
-
-  overlayDelayTimer?.cancel();
-  appCheckTimer?.cancel();
-
-  hideFocusOverlay();
-  focusActive = false;
-
-  timer.removeListener(_checkReward);
-  timer.stop();
-  FocusService.stop();
-
-  super.dispose();
-}
-
+    FocusService.start();
+  
+     }
 
   
-@override
-void didChangeAppLifecycleState(AppLifecycleState state) {
-  if (state == AppLifecycleState.detached) {
-    hideFocusOverlay();
+ 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
+    timer.removeListener(_checkReward);
+    timer.stop();
+    FocusService.stop();
+
+    super.dispose();
   }
-}
 
-
-
-
-Future<void> showFocusOverlay() async {
-  if (overlayShown) return;
-
-  await FlutterOverlayWindow.showOverlay(
-    height: -1,
-    width: -1,
-    enableDrag: false,
-    flag: OverlayFlag.defaultFlag,
-  );
-
-  overlayShown = true;
-}
-
-Future<void> hideFocusOverlay() async {
-  try {
-    await FlutterOverlayWindow.closeOverlay();
-  } catch (_) {}
-  overlayShown = false;
-}
-
-
-
-Future<void> simpantimer() async {
+  
+  Future<void> simpantimer() async {
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return;
 
   await Supabase.instance.client.from('timer').insert({
     'user_id': user.id,
+
+   
+    'started_at': sessionStartTime?.toIso8601String(),
+    'ended_at': DateTime.now().toIso8601String(),
+
     'durasi_fokus': timer.focusSeconds ~/ 60,
     'durasi_istirahat': timer.breakSeconds ~/ 60,
     'durasi_istirahat_panjang': timer.longBreakSeconds ~/ 60,
@@ -218,142 +75,132 @@ Future<void> simpantimer() async {
 }
 
 
-void _checkReward() {
-  if (timer.tunggureward && !rewardShown && mounted) {
-    rewardShown = true;
+  void _checkReward() {
+    if (timer.tunggureward && !rewardShown && mounted) {
+      rewardShown = true;
 
-    int babak = (timer.step + 1) ~/ 2;
-    int rewardPhase = timer.getMaxPhase(babak);
+      int babak = (timer.step + 1) ~/ 2;
+      int rewardPhase = timer.getMaxPhase(babak);
 
-    final dummyAyam = TamandantelurFokus(
-      remainingseconds: 0,
-      totalseconds: 1,
-      babak: babak,
-      timerService: timer,
+      final dummyAyam = TamandantelurFokus(
+        remainingseconds: 0,
+        totalseconds: 1,
+        babak: babak,
+        timerService: timer,
+      );
+
+      showRewardDialog(context, timer);
+
+      sessionCompleted = true;
+
+      simpantimer();
+
+      timer.tunggureward = false;
+
+      Future(() async {
+        await RewardService.save(
+          menitFokus: ((timer.focusSeconds ~/ 60) * timer.babak),
+          faseAyam: rewardPhase,
+          rewardImage: dummyAyam.pertumbuhanayam[rewardPhase].split("/").last,
+        );
+      });
+    }
+  }
+
+  Future<bool> _konfirmasikeluar() async {
+    if (timer.isLongBreakFinished) {
+      return true;
+    }
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: const Color(0xFFE6F2E6),
+          contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+
+          title: Center(
+            child: Text(
+              "Yakin Menyerah?",
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                color: const Color(0xFF182E19),
+              ),
+            ),
+          ),
+
+          content: Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 10),
+            child: Text(
+              "Kalau kamu menyerah sekarang, sesi fokus akan berhenti. ",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: const Color(0xFF4E574E),
+                height: 1.4,
+              ),
+            ),
+          ),
+
+          actionsPadding: const EdgeInsets.all(20),
+
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 100, 88, 88),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      "Menyerah",
+                      style: GoogleFonts.inter(
+                        color: const Color(0xffffffff),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF52B755),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      "Lanjut",
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
-
-   showRewardDialog(context, timer);
-
-    sessionCompleted = true;
-
-    simpantimer();
-
-    timer.tunggureward = false;
-
-    
-    Future(() async {
-      await RewardService.save(
-        menitFokus: ((timer.focusSeconds ~/ 60) * timer.babak),
-        faseAyam: rewardPhase,
-        rewardImage: dummyAyam.pertumbuhanayam[rewardPhase].split("/").last,
-      );
-    });
   }
-}
-
-
-  
-
- Future<bool> _konfirmasikeluar() async {
-   
-  if (timer.isLongBreakFinished) {
-    
-    return true;
-  }
-  return await showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        backgroundColor: const Color(0xFFE6F2E6),
-        contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-
-        title: Center(
-          child: Text(
-            "Yakin Menyerah?",
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: const Color(0xFF182E19),
-            ),
-          ),
-        ),
-
-        content: Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 10),
-          child: Text(        
-            "Kalau kamu menyerah sekarang, sesi fokus akan berhenti. ",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              color: const Color(0xFF4E574E),
-              height: 1.4,
-            ),
-          ),
-        ),
-
-        actionsPadding: const EdgeInsets.all(20),
-
-        actions: [
-          Row(
-            children: [
-
-               Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                   backgroundColor:Color.fromARGB(255, 100, 88, 88),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    "Menyerah",
-                    style: GoogleFonts.inter(
-                      color: const Color(0xffffffff),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-             
-              const SizedBox(width: 12),
-
-              
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF52B755),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    "Lanjut",
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-             
-            ],
-          ),
-        ],
-      );
-    },
-  );
-}
-
 
   void showRewardDialog(BuildContext context, TimerService timer) {
     int babak = (timer.step + 1) ~/ 2;
@@ -415,18 +262,14 @@ void _checkReward() {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);   
-                timer.stop();             
+                Navigator.pop(context);
+                timer.stop();
                 FocusService.stop();
-focusActive = false;
-appCheckTimer?.cancel();
-hideFocusOverlay();
+                           
 
-                
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 }
-
 
                 Navigator.pushReplacementNamed(context, '/home');
               },
@@ -452,8 +295,6 @@ hideFocusOverlay();
     );
   }
 
- 
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -466,10 +307,7 @@ hideFocusOverlay();
         if (keluar) {
           timer.stop();
           FocusService.stop();
-focusActive = false;
-appCheckTimer?.cancel();
-hideFocusOverlay();
-
+                 
           Navigator.pop(context);
         }
       },
@@ -488,14 +326,13 @@ hideFocusOverlay();
                       if (keluar) {
                         timer.stop();
                         FocusService.stop();
-focusActive = false;
-appCheckTimer?.cancel();
-hideFocusOverlay();
+                                           
+                       
 
                         if (!mounted) return;
-                          Navigator.pop(context);
-                        }
-                       },
+                        Navigator.pop(context);
+                      }
+                    },
                     icon: SvgPicture.asset(
                       "assets/icons/close.svg",
                       height: 33,
@@ -595,16 +432,13 @@ hideFocusOverlay();
                       onPressed: () async {
                         bool keluar = await _konfirmasikeluar();
                         if (keluar) {
-                           timer.stop();
-                           FocusService.stop();
-focusActive = false;
-appCheckTimer?.cancel();
-hideFocusOverlay();
+                          timer.stop();
+                          FocusService.stop();
+                                             
 
-                           if (!mounted) return;
-                           Navigator.pop(context);
+                          if (!mounted) return;
+                          Navigator.pop(context);
                         }
-                       
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xffB77227),

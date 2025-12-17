@@ -49,7 +49,9 @@ void main() async {
 
   initAppLinks();
 
-   runApp(
+ 
+
+    runApp(
     ChangeNotifierProvider(
       create: (_) => TimerService(), 
       child: const MyApp(),
