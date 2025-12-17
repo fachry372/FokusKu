@@ -88,8 +88,19 @@ class FocusAccessibilityService : AccessibilityService() {
     }
 
     private fun isSafeZone(pkg: String): Boolean {
-        return isMyApp(pkg) || isHome(pkg)
-    }
+    return isMyApp(pkg) || isHome(pkg) || isSystemUI(pkg)
+}
+
+private fun isSystemUI(pkg: String): Boolean {
+    val systemPkgs = listOf(
+        "com.android.systemui",
+        "com.android.settings",
+        "com.android.keyguard"
+       
+    )
+    return systemPkgs.any { pkg.startsWith(it) }
+}
+
 
     private fun isMyApp(pkg: String): Boolean {
         return pkg == FocusState.myPackage
