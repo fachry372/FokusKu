@@ -24,7 +24,6 @@ object OverlayManager {
 
     private fun show(context: Context) {
         if (!Settings.canDrawOverlays(context)) return
-
         ensureOverlay(context)
 
         if (!isVisible) {
