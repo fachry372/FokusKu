@@ -100,8 +100,8 @@ class _MyAppState extends State<MyApp> {
         '/home'  : (context) => Navbar(),
         '/kirim' : (context) => Kirimlink(),
       },
-      // home: SplashScreen() ,    
-      home: Navbar(),
+      home: SplashScreen() ,    
+      // home: Navbar(),
     );
   }
 }

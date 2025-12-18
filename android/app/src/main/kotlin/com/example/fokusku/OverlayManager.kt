@@ -7,6 +7,10 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.content.Intent
+import android.widget.Button
+import com.example.fokusku.MainActivity
+
 
 object OverlayManager {
 
@@ -22,7 +26,7 @@ object OverlayManager {
         show(context)
     }
 
-    private fun show(context: Context) {
+    fun show(context: Context) {
         if (!Settings.canDrawOverlays(context)) return
         ensureOverlay(context)
 
@@ -47,6 +51,15 @@ object OverlayManager {
         overlayView = LayoutInflater.from(context)
             .inflate(R.layout.focus_overlay, null)
             .apply { visibility = View.GONE }
+
+           
+    val btnBack = overlayView?.findViewById<Button>(R.id.btn_back_to_focus)
+    btnBack?.setOnClickListener {
+        val intent = Intent(context,MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+        hide() 
+    }
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
