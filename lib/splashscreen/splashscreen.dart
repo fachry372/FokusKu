@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/auth/auth_gate.dart';
-import 'package:fokusku/izinoverlay/permission_guard.dart';
 import 'dart:async';
-import 'package:fokusku/izinoverlay/permission_screen.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,28 +19,16 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initSplash() async {
-    await Future.delayed(const Duration(seconds: 2));
+  await Future.delayed(const Duration(seconds: 2));
 
-    final granted = await PermissionGuard.allGranted();
+  if (!mounted) return;
 
-    if (!mounted) return;
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => const AuthGate()),
+  );
+}
 
-    if (!granted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const PermissionScreen(),
-        ),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const AuthGate(),
-        ),
-      );
-    }
-  }
   
   @override
   Widget build(BuildContext context) {

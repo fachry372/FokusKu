@@ -4,6 +4,8 @@ import 'package:fokusku/timer/timer.dart';
 import 'package:fokusku/halaman/sesifokus.dart';
 import 'package:fokusku/tamandantelur/tamantelur.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fokusku/izinoverlay/permission_screen.dart';
+import 'package:fokusku/izinoverlay/permission_guard.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -85,7 +87,7 @@ showDialog(
               }
               final numVal = int.tryParse(value);
               if (numVal == null) return "Harus berupa angka";
-              if (numVal < 1 || numVal > 60) return "Durasi 1 hingga 60 menit.";
+              if (numVal < 25 || numVal > 60) return "Durasi 25 hingga 60 menit.";
               return null;
             },
           ),
@@ -128,7 +130,7 @@ showDialog(
               }
               final numVal = int.tryParse(value);
               if (numVal == null) return "Harus berupa angka";
-              if (numVal < 1 || numVal > 5) return "Durasi 5 menit.";
+              if (numVal < 5 || numVal > 5) return "Durasi 5 menit.";
               return null;
             },
           ),
@@ -173,7 +175,7 @@ TextFormField(
     }
     final numVal = int.tryParse(value);
     if (numVal == null) return "Harus berupa angka";
-    if (numVal < 1 || numVal > 30) return "Durasi 15 hingga 30 menit.";
+    if (numVal < 15 || numVal > 30) return "Durasi 15 hingga 30 menit.";
     return null;
   },
 ),
@@ -350,17 +352,32 @@ TextFormField(
               ),
                 const SizedBox(height: 25),
                 ElevatedButton(
-                  onPressed: () {
-                    timerService.reset();
-                    timerService.startPomodoro();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            Sesifokus(timerService: timerService),
-                      ),
-                    );
-                  },
+                  onPressed: () async {
+  final granted = await PermissionGuard.allGranted();
+
+  if (!granted) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PermissionScreen(),
+      ),
+    );
+    return;
+  }
+
+  // izin OK → mulai fokus
+  timerService.reset();
+  timerService.startPomodoro();
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) =>
+          Sesifokus(timerService: timerService),
+    ),
+  );
+},
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xff52B755),
                     fixedSize: const Size(162, 33),

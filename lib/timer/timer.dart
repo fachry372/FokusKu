@@ -9,8 +9,8 @@ class TimerService extends ChangeNotifier {
 
  
   int focusSeconds = 1500; 
-  int breakSeconds = 60;  
-  int longBreakSeconds = 60; 
+  int breakSeconds = 300;  
+  int longBreakSeconds = 900; 
   int babak = 4; 
 
   bool isFocus = true;

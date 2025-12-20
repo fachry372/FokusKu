@@ -1,7 +1,6 @@
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:fokusku/halaman/navbar.dart';
-import 'package:fokusku/izinoverlay/overlay.dart';
 import 'package:fokusku/kirimlink.dart';
 import 'package:fokusku/register.dart';
 import 'package:fokusku/resetpassword.dart';
@@ -10,21 +9,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:fokusku/timer/timer.dart';
 
-
-
 import 'login.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-// overlay entry point
-@pragma("vm:entry-point")
-void overlayMain() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: FocusOverlay()
-  ));
-}
-
 
 
 void main() async {

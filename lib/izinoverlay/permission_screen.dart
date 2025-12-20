@@ -42,27 +42,44 @@ class _PermissionScreenState extends State<PermissionScreen>
     }
   }
 
-  // tombol "Aktifkan Semua Izin"
-  Future<void> _activateAll() async {
-    // 1. Overlay
-    if (!await Permintaanizin.overlayGranted()) {
-      await platform.invokeMethod('openOverlaySettings');
-      return;
-    }
+ Future<void> _activateAll() async {
+  bool overlayGranted = await Permintaanizin.overlayGranted();
+  bool accessibilityGranted = await Permintaanizin.accessibilityGranted();
+  bool usageGranted = await Permintaanizin.usageGranted();
 
-    // 2. Accessibility
-    if (!await Permintaanizin.accessibilityGranted()) {
-      await platform.invokeMethod('openAccessibilitySettings');
-      return;
-    }
-
-    // 3. Usage access
-    if (!await Permintaanizin.usageGranted()) {
-      await platform.invokeMethod('openUsageAccessSettings');
-      return;
-    }
-
-    // Semua izin sudah lengkap → lanjut
+  if (!overlayGranted || !accessibilityGranted || !usageGranted) {
+    // tampilkan dialog edukasi
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Izin Diperlukan'),
+        content: Text(
+          'Fokusku membutuhkan izin berikut agar dapat berjalan:\n\n'
+          '- Tampil di atas aplikasi lain\n'
+          '- Aksesibilitas\n'
+          '- Akses penggunaan aplikasi\n\n'
+          'Silakan aktifkan izin melalui pengaturan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // buka setting sesuai izin yang belum aktif
+              if (!overlayGranted) {
+                platform.invokeMethod('openOverlaySettings');
+              } else if (!accessibilityGranted) {
+                platform.invokeMethod('openAccessibilitySettings');
+              } else if (!usageGranted) {
+                platform.invokeMethod('openUsageAccessSettings');
+              }
+            },
+            child: const Text('Buka Pengaturan'),
+          ),
+        ],
+      ),
+    );
+  } else {
+    // semua izin sudah diberikan → lanjut
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -70,6 +87,8 @@ class _PermissionScreenState extends State<PermissionScreen>
       );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
