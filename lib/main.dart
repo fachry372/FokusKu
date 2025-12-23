@@ -2,6 +2,8 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:fokusku/halaman/navbar.dart';
 import 'package:fokusku/kirimlink.dart';
+import 'package:fokusku/notif/foreground_service.dart';
+import 'package:fokusku/notif/notif.dart';
 import 'package:fokusku/register.dart';
 import 'package:fokusku/resetpassword.dart';
 import 'package:fokusku/splashscreen/splashscreen.dart';
@@ -36,8 +38,10 @@ void main() async {
 
   initAppLinks();
 
- 
-
+  
+   await Notif.init(); 
+    
+     ForegroundService.init(); 
     runApp(
     ChangeNotifierProvider(
       create: (_) => TimerService(), 

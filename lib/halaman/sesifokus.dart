@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fokusku/auth/riwayatkoleksi.dart';
-import 'package:fokusku/izinoverlay/focus_service.dart';
+import 'package:fokusku/notif/foreground_service.dart';
+import 'package:fokusku/notif/notif.dart';
 import 'package:fokusku/tamandantelur/tamandantelurfokus.dart';
 import 'package:fokusku/tamandantelur/tamanteluristirahat.dart';
 import 'package:fokusku/timer/timer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
-
+import 'package:flutter/services.dart';
 
 class Sesifokus extends StatefulWidget {
   final TimerService timerService;
@@ -25,87 +27,145 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
   bool sessionCompleted = false;
   DateTime? sessionStartTime;
 
+  static const MethodChannel _channel = MethodChannel('focus_session');
+   bool _focusSessionActive = false;
+
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    WidgetsBinding.instance.addObserver(this);
-    timer = widget.timerService;
-    sessionStartTime = DateTime.now();
-    sessionCompleted = false;
-    timer.startPomodoro();
-    rewardShown = false;
-    timer.addListener(_checkReward);
+  WidgetsBinding.instance.addObserver(this);
 
-    FocusService.start();
-  
-     }
+  _channel.invokeMethod('setFocusActive', true); 
 
-  
- 
+  _channel.setMethodCallHandler((call) async {
+    if (call.method == 'user_left_app') {
+      _onUserLeftApp();
+    }
+  });
+  timer = widget.timerService;
+
+  timer.reset();
+  sessionStartTime = DateTime.now();
+  sessionCompleted = false;
+  rewardShown = false;
+
+
+  timer.startPomodoro();
+  _focusSessionActive = true;
+
+  timer.addListener(_checkReward);
+}
+
+
   @override
   void dispose() {
+      _channel.invokeMethod('setFocusActive', false); 
+  _channel.setMethodCallHandler(null);
+    _focusSessionActive = false; 
     WidgetsBinding.instance.removeObserver(this);
 
     timer.removeListener(_checkReward);
     timer.stop();
-    FocusService.stop();
+ 
 
     super.dispose();
   }
 
-  
-  Future<void> simpantimer() async {
-  final user = Supabase.instance.client.auth.currentUser;
-  if (user == null) return;
+ 
 
-  await Supabase.instance.client.from('timer').insert({
-    'user_id': user.id,
+Future<void> _endFocusSession({bool selesai = false}) async {
+  if (!_focusSessionActive) return;
 
-   
-    'started_at': sessionStartTime?.toIso8601String(),
-    'ended_at': DateTime.now().toIso8601String(),
+  _focusSessionActive = false;
 
-    'durasi_fokus': timer.focusSeconds ~/ 60,
-    'durasi_istirahat': timer.breakSeconds ~/ 60,
-    'durasi_istirahat_panjang': timer.longBreakSeconds ~/ 60,
-    'jumlah_sesi': timer.babak,
-    'selesai': true,
-  });
+  try {
+    await _channel.invokeMethod('setFocusActive', false);
+  } catch (_) {}
+
+  timer.terminateSession();
+  await ForegroundService.stop();
+  Notif.cancelFocusNotification();
+  sessionCompleted = true;
+
+  if (selesai) {
+    await simpantimer();
+  }
 }
 
 
-  void _checkReward() {
-    if (timer.tunggureward && !rewardShown && mounted) {
-      rewardShown = true;
 
-      int babak = (timer.step + 1) ~/ 2;
-      int rewardPhase = timer.getMaxPhase(babak);
+void _onUserLeftApp() async {
+  if (!mounted) return;
+  if (!_focusSessionActive) return;
+  if (sessionCompleted) return;
 
-      final dummyAyam = TamandantelurFokus(
-        remainingseconds: 0,
-        totalseconds: 1,
-        babak: babak,
-        timerService: timer,
-      );
+  await _endFocusSession();
+  Notif.showFocusEndedNotification();
 
-      showRewardDialog(context, timer);
-
-      sessionCompleted = true;
-
-      simpantimer();
-
-      timer.tunggureward = false;
-
-      Future(() async {
-        await RewardService.save(
-          menitFokus: ((timer.focusSeconds ~/ 60) * timer.babak),
-          faseAyam: rewardPhase,
-          rewardImage: dummyAyam.pertumbuhanayam[rewardPhase].split("/").last,
-        );
-      });
-    }
+  if (mounted) {
+    Navigator.pushReplacementNamed(context, '/home');
   }
+}
+
+
+
+  Future<void> simpantimer() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    await Supabase.instance.client.from('timer').insert({
+      'user_id': user.id,
+
+      'started_at': sessionStartTime?.toIso8601String(),
+      'ended_at': DateTime.now().toIso8601String(),
+
+      'durasi_fokus': timer.focusSeconds ~/ 60,
+      'durasi_istirahat': timer.breakSeconds ~/ 60,
+      'durasi_istirahat_panjang': timer.longBreakSeconds ~/ 60,
+      'jumlah_sesi': timer.babak,
+      'selesai': true,
+    });
+  }
+
+  void _checkReward() {
+  if (!timer.sesiFokusAktif) return;
+  if (!timer.tunggureward || rewardShown || !mounted) return;
+
+  rewardShown = true;
+
+  int babak = (timer.step + 1) ~/ 2;
+  int rewardPhase = timer.getMaxPhase(babak);
+
+  final dummyAyam = TamandantelurFokus(
+    remainingseconds: 0,
+    totalseconds: 1,
+    babak: babak,
+    timerService: timer,
+  );
+
+  
+  SchedulerBinding.instance.addPostFrameCallback((_) async {
+    if (!mounted) return;
+
+    
+    showRewardDialog(context, timer);
+
+    sessionCompleted = true;
+
+    await simpantimer();
+
+    timer.tunggureward = false;
+    Notif.cancelFocusNotification();
+    await ForegroundService.stop();
+
+    await RewardService.save(
+      menitFokus: ((timer.focusSeconds ~/ 60) * timer.babak),
+      faseAyam: rewardPhase,
+      rewardImage: dummyAyam.pertumbuhanayam[rewardPhase].split("/").last,
+    );
+  });
+}
 
   Future<bool> _konfirmasikeluar() async {
     if (timer.isLongBreakFinished) {
@@ -264,8 +324,6 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
               onPressed: () {
                 Navigator.pop(context);
                 timer.stop();
-                FocusService.stop();
-                           
 
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
@@ -304,12 +362,12 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
 
         bool keluar = await _konfirmasikeluar();
 
-        if (keluar) {
-          timer.stop();
-          FocusService.stop();
-                 
-          Navigator.pop(context);
-        }
+          if (keluar) {
+     _endFocusSession();
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context);
+    });
+  }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFEAEFD9),
@@ -322,17 +380,15 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
                 children: [
                   IconButton(
                     onPressed: () async {
-                      bool keluar = await _konfirmasikeluar();
-                      if (keluar) {
-                        timer.stop();
-                        FocusService.stop();
-                                           
-                       
+  bool keluar = await _konfirmasikeluar();
+  if (keluar) {
+     _endFocusSession();
+         SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context);
+    });
+  }
+},
 
-                        if (!mounted) return;
-                        Navigator.pop(context);
-                      }
-                    },
                     icon: SvgPicture.asset(
                       "assets/icons/close.svg",
                       height: 33,
@@ -429,17 +485,17 @@ class _SesifokusState extends State<Sesifokus> with WidgetsBindingObserver {
                   const SizedBox(height: 25),
                   Center(
                     child: ElevatedButton(
-                      onPressed: () async {
-                        bool keluar = await _konfirmasikeluar();
-                        if (keluar) {
-                          timer.stop();
-                          FocusService.stop();
-                                             
+                     onPressed: () async {
+  bool keluar = await _konfirmasikeluar();
+  if (keluar) {
+     _endFocusSession();
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context);
+    });
+  }
+},
 
-                          if (!mounted) return;
-                          Navigator.pop(context);
-                        }
-                      },
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xffB77227),
                         fixedSize: const Size(162, 33),

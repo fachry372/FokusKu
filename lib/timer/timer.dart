@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:fokusku/notif/foreground_service.dart';
+import 'package:fokusku/notif/notif.dart';
 
 
 
@@ -12,6 +14,11 @@ class TimerService extends ChangeNotifier {
   int breakSeconds = 300;  
   int longBreakSeconds = 900; 
   int babak = 4; 
+
+  // int focusSeconds = 60; 
+  // int breakSeconds = 60;  
+  // int longBreakSeconds = 60; 
+  // int babak = 2; 
 
   bool isFocus = true;
 
@@ -78,9 +85,11 @@ String get nextSessionLabel {
     return "${m.toString().padLeft(2,'0')}:00";
   }
 
+bool sesiFokusAktif = false;
 
 
   void startPomodoro() {
+    sesiFokusAktif = true;
     step = 1;
     startNextStep();
   }
@@ -103,7 +112,12 @@ String get nextSessionLabel {
   }
 
  void startFocus() {
+  if (!sesiFokusAktif) return; 
   isFocus = true;
+
+  ForegroundService.start();
+  Notif.showFocusNotification();
+
   start(
     seconds: focusSeconds,
     onFinished: () {
@@ -116,7 +130,12 @@ String get nextSessionLabel {
 
 
   void startShortBreak() {
+      if (!sesiFokusAktif) return;
+
     isFocus = false;
+
+  
+
     start(
       seconds: breakSeconds,
       onFinished: () {
@@ -129,12 +148,18 @@ String get nextSessionLabel {
  
 
   void startLongBreak() {
+      if (!sesiFokusAktif) return;
+
   isFocus = false;
 
-  start(
+ 
+   start(
     seconds: longBreakSeconds,
     onFinished: () {
       tunggureward = true;
+      
+      Notif.cancelFocusNotification();
+      ForegroundService.stop();
       notifyListeners();
       stop();
     },
@@ -191,6 +216,17 @@ void start({required int seconds, VoidCallback? onFinished}) {
 
     reset();
   }
+
+ void terminateSession() {
+  _timer?.cancel();
+  _remainingSeconds = focusSeconds;
+  step = 0;
+  sesiFokusAktif = false;
+  tunggureward = false;
+  notifyListeners();
+}
+
+
 
   
 

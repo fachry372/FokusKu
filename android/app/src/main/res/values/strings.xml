@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Fokusku</string>
-
-    <string name="accessibility_desc">
-        Digunakan untuk mendeteksi aplikasi yang sedang dibuka selama sesi fokus.
-    </string>
-</resources>
