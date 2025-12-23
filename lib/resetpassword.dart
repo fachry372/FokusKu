@@ -35,7 +35,7 @@ class _ResetpasswordScreenState extends State<Resetpassword> {
 
   if (_passwordController.text != _konfirmasipasswordController.text) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text("Password tidak sama")));
+        .showSnackBar(const SnackBar(content: Text("Kata sandi tidak sama")));
     return;
   }
 
@@ -49,7 +49,7 @@ class _ResetpasswordScreenState extends State<Resetpassword> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Password berhasil diubah")),
+      const SnackBar(content: Text("kata sandi berhasil diubah")),
     );
 
    

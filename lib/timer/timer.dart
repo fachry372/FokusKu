@@ -9,16 +9,19 @@ class TimerService extends ChangeNotifier {
   int _remainingSeconds = 0;
   Timer? _timer;
 
+  DateTime? _endTime;
+  Timer? _ticker;
+
  
   int focusSeconds = 1500; 
   int breakSeconds = 300;  
   int longBreakSeconds = 900; 
   int babak = 4; 
 
-  // int focusSeconds = 60; 
-  // int breakSeconds = 60;  
-  // int longBreakSeconds = 60; 
-  // int babak = 2; 
+  // int focusSeconds = 20; 
+  // int breakSeconds = 20;  
+  // int longBreakSeconds = 20; 
+  // int babak = 1; 
 
   bool isFocus = true;
 
@@ -115,7 +118,7 @@ bool sesiFokusAktif = false;
   if (!sesiFokusAktif) return; 
   isFocus = true;
 
-  ForegroundService.start();
+  ForegroundService.start(focusSeconds);
   Notif.showFocusNotification();
 
   start(
@@ -168,31 +171,27 @@ bool sesiFokusAktif = false;
 
 
 void start({required int seconds, VoidCallback? onFinished}) {
-  _remainingSeconds = seconds;
-  _timer?.cancel();
+  _endTime = DateTime.now().add(Duration(seconds: seconds));
+  _ticker?.cancel();
 
-  _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-    if (_remainingSeconds > 0) {
-      _remainingSeconds--;
-      notifyListeners();
-    } else {
-      
-      t.cancel();
-      notifyListeners();
+  _ticker = Timer.periodic(const Duration(milliseconds: 500), (_) {
+  final diffMs = _endTime!.difference(DateTime.now()).inMilliseconds;
+  final diff = (diffMs / 1000).ceil();
 
-      if (onFinished != null) {
-        Future.delayed(const Duration(seconds: 0), () {
-          onFinished();
-        });
-      }
-    }
-  });
+  if (diff > 0) {
+    _remainingSeconds = diff;
+    notifyListeners();
+  } else {
+    _remainingSeconds = 0;
+    _ticker?.cancel();
+    notifyListeners();
+    onFinished?.call();
+  }
+});
 
-  notifyListeners();
 }
-
   void stop() {
-    _timer?.cancel();
+    _ticker?.cancel();
     notifyListeners();
   }
 
@@ -232,7 +231,7 @@ void start({required int seconds, VoidCallback? onFinished}) {
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _ticker?.cancel();
     super.dispose();
   }
 }
