@@ -100,8 +100,9 @@ void _onUserLeftApp() async {
   if (!_focusSessionActive) return;
   if (sessionCompleted) return;
 
+ Notif.showFocusEndedNotification();
   await _endFocusSession();
-  Notif.showFocusEndedNotification();
+ 
 
   if (mounted) {
     Navigator.pushReplacementNamed(context, '/home');

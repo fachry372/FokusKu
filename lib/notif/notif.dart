@@ -30,8 +30,8 @@ class Notif {
 
     await _notifications.show(
        focusNotificationId,  
-      'Sesi Fokus',
-      'Sedang berjalan',
+      'Sesi Fokus Berjalan ⏳',
+      'Yuk tetap fokus sebentar lagi, Keluar dari aplikasi akan mengakhiri sesi fokusmu.',
       const NotificationDetails(android: androidDetails),
     );
   }
@@ -49,10 +49,10 @@ class Notif {
   );
 
   await _notifications.show(
-     focusNotificationId, 
-    'Sesi Fokus Berakhir',
-    'Sesi fokus kamu dihentikan karena keluar aplikasi',
-    const NotificationDetails(android: androidDetails),
+     3, 
+    'Sesi Fokus Berakhir 😔 ',
+    'Aku tahu ini nggak sengaja… Tapi karena kamu keluar, sesi fokusmu berhenti' ,
+  const NotificationDetails(android: androidDetails),
   );
 }
 
@@ -77,20 +77,26 @@ class Notif {
   );
 }
 
+
+
 static Future<void> showSessionFinishedNotification() async {
   await _notifications.show(
-    focusNotificationId,
+    2, 
     'Sesi Fokus Selesai 🎉',
     'Buka aplikasi untuk melihat reward kamu',
     const NotificationDetails(
       android: AndroidNotificationDetails(
-        'session_done',
-        'Sesi Fokus',
+        'session_finished_channel', 
+        'Sesi Fokus Selesai',
         importance: Importance.high,
+        priority: Priority.high,
+        ongoing: false,
+        autoCancel: true,
       ),
     ),
   );
 }
+
 
 
 static Future<void> showShortBreakNotification() async {

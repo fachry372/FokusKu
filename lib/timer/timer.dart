@@ -13,15 +13,15 @@ class TimerService extends ChangeNotifier {
   Timer? _ticker;
 
  
-  int focusSeconds = 1500; 
-  int breakSeconds = 300;  
-  int longBreakSeconds = 900; 
-  int babak = 4; 
+  // int focusSeconds = 1500; 
+  // int breakSeconds = 300;  
+  // int longBreakSeconds = 900; 
+  // int babak = 4; 
 
-  // int focusSeconds = 20; 
-  // int breakSeconds = 20;  
-  // int longBreakSeconds = 20; 
-  // int babak = 1; 
+  int focusSeconds = 20; 
+  int breakSeconds = 20;  
+  int longBreakSeconds = 20; 
+  int babak = 1; 
 
   bool isFocus = true;
 
@@ -160,8 +160,9 @@ bool sesiFokusAktif = false;
     seconds: longBreakSeconds,
     onFinished: () {
       tunggureward = true;
-      
+      Notif.showSessionFinishedNotification();
       Notif.cancelFocusNotification();
+     
       ForegroundService.stop();
       notifyListeners();
       stop();
