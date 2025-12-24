@@ -17,7 +17,8 @@ class TimerService extends ChangeNotifier {
   int breakSeconds = 300;  
   int longBreakSeconds = 900; 
   int babak = 4; 
-
+  
+  
   // int focusSeconds = 20; 
   // int breakSeconds = 20;  
   // int longBreakSeconds = 20; 
