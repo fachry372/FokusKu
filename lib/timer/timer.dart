@@ -13,15 +13,15 @@ class TimerService extends ChangeNotifier {
   Timer? _ticker;
 
  
-  int focusSeconds = 1500; 
-  int breakSeconds = 300;  
-  int longBreakSeconds = 900; 
-  int babak = 4; 
+  // int focusSeconds = 1500; 
+  // int breakSeconds = 300;  
+  // int longBreakSeconds = 900; 
+  // int babak = 4; 
 
-  // int focusSeconds = 20; 
-  // int breakSeconds = 20;  
-  // int longBreakSeconds = 20; 
-  // int babak = 1; 
+  int focusSeconds = 20; 
+  int breakSeconds = 20;  
+  int longBreakSeconds = 20; 
+  int babak = 1; 
 
   bool isFocus = true;
 
@@ -59,9 +59,17 @@ bool get isLongBreakFinished => !isFocus && _remainingSeconds == 0;
 
  
 
-  String get currentSessionLabel {
+//   String get currentSessionLabel {
+//   return isFocus ? "Waktu Fokus" : "Waktu Istirahat";
+// }
+
+String get currentSessionLabel {
+  if (!sesiFokusAktif) return "Sesi belum dimulai";
+
   return isFocus ? "Waktu Fokus" : "Waktu Istirahat";
 }
+
+
 
 String get nextSessionLabel {
   if (step < babak * 2 - 1) {
@@ -151,24 +159,27 @@ bool sesiFokusAktif = false;
  
 
   void startLongBreak() {
-      if (!sesiFokusAktif) return;
+  if (!sesiFokusAktif) return;
 
   isFocus = false;
 
- 
-   start(
+  start(
     seconds: longBreakSeconds,
     onFinished: () {
+      
+      if (!sesiFokusAktif) return;
+
       tunggureward = true;
       Notif.showSessionFinishedNotification();
       Notif.cancelFocusNotification();
-     
+
       ForegroundService.stop();
       notifyListeners();
       stop();
     },
   );
 }
+
 
 
 void start({required int seconds, VoidCallback? onFinished}) {
