@@ -6,7 +6,10 @@ import 'package:fokusku/notif/notif.dart';
 
 
 class TimerService extends ChangeNotifier {
-  int _remainingSeconds = 0;
+  int _remainingSeconds;
+
+  TimerService() : _remainingSeconds = 1500;
+
   Timer? _timer;
 
   DateTime? _endTime;
@@ -18,11 +21,12 @@ class TimerService extends ChangeNotifier {
   int longBreakSeconds = 900; 
   int babak = 4; 
   
-  
+
   // int focusSeconds = 20; 
   // int breakSeconds = 20;  
   // int longBreakSeconds = 20; 
   // int babak = 1; 
+
 
   bool isFocus = true;
 
@@ -98,6 +102,8 @@ String get nextSessionLabel {
   }
 
 bool sesiFokusAktif = false;
+
+
 
 
   void startPomodoro() {
@@ -229,12 +235,19 @@ void start({required int seconds, VoidCallback? onFinished}) {
     reset();
   }
 
- void terminateSession() {
-  _timer?.cancel();
+void terminateSession() {
+  
+  _ticker?.cancel();
+  _timer?.cancel(); 
+ 
   _remainingSeconds = focusSeconds;
+
+
   step = 0;
   sesiFokusAktif = false;
   tunggureward = false;
+
+
   notifyListeners();
 }
 

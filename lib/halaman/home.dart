@@ -93,8 +93,9 @@ class Home extends StatelessWidget {
                     }
                     final numVal = int.tryParse(value);
                     if (numVal == null) return "Harus berupa angka";
-                    if (numVal < 25 || numVal > 60)
+                    if (numVal < 25 || numVal > 60) {
                       return "Durasi 25 hingga 60 menit.";
+                    }
                     return null;
                   },
                 ),
@@ -143,7 +144,7 @@ class Home extends StatelessWidget {
                     }
                     final numVal = int.tryParse(value);
                     if (numVal == null) return "Harus berupa angka";
-                    if (numVal < 5 || numVal > 5) return "Durasi 5 menit.";
+                    if (numVal < 1 || numVal > 5) return "Durasi 5 menit.";
                     return null;
                   },
                 ),
@@ -340,7 +341,7 @@ class Home extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          timerService.initialFocusTime,
+                          timerService.formattedTime,
                           style: GoogleFonts.inter(
                             fontSize: 70,
                             fontWeight: FontWeight.w400,

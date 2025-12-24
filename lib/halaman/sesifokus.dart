@@ -489,6 +489,7 @@ void _onUserLeftApp() async {
                      onPressed: () async {
   bool keluar = await _konfirmasikeluar();
   if (keluar) {
+    
      _endFocusSession();
       SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) Navigator.pop(context);
