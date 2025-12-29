@@ -376,15 +376,12 @@ class Home extends StatelessWidget {
     await Izinnotif.showIfNeeded(context);
 
   
-    timerService.terminateSession();
+   
     await ForegroundService.stop();
     Notif.cancelFocusNotification();
 
-   
-    timerService.reset();
     timerService.sesiFokusAktif = true;
-    timerService.startPomodoro();
-
+    
     Navigator.push(
       context,
       MaterialPageRoute(

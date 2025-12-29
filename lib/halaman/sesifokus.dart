@@ -72,7 +72,6 @@ void initState() {
     super.dispose();
   }
 
- 
 
 Future<void> _endFocusSession({bool selesai = false}) async {
   if (!_focusSessionActive) return;
@@ -94,7 +93,6 @@ Future<void> _endFocusSession({bool selesai = false}) async {
 }
 
 
-
 void _onUserLeftApp() async {
   if (!mounted) return;
   if (!_focusSessionActive) return;
@@ -108,7 +106,6 @@ void _onUserLeftApp() async {
     Navigator.pushReplacementNamed(context, '/home');
   }
 }
-
 
 
   Future<void> simpantimer() async {

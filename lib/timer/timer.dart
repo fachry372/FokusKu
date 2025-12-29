@@ -252,9 +252,6 @@ void terminateSession() {
 }
 
 
-
-  
-
   @override
   void dispose() {
     _ticker?.cancel();

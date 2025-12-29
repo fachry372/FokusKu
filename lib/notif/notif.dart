@@ -51,7 +51,7 @@ class Notif {
   await _notifications.show(
      3, 
     'Sesi Fokus Berakhir 😔 ',
-    'Yahh… sesi fokusmu berakhir, karena kamu keluar dari aplikasi sebelum sesi fokus selesai.',
+    'Yahh… sesi fokusmu berakhir, karena kamu keluar dari aplikasi.',
   const NotificationDetails(android: androidDetails),
   );
 }
