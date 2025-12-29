@@ -195,7 +195,7 @@ void start({required int seconds, VoidCallback? onFinished}) {
 
   _ticker = Timer.periodic(const Duration(milliseconds: 500), (_) {
   final diffMs = _endTime!.difference(DateTime.now()).inMilliseconds;
-  final diff = (diffMs / 1000).ceil();
+  final diff = (diffMs / 1000).floor();
 
   if (diff > 0) {
     _remainingSeconds = diff;
