@@ -38,14 +38,14 @@ class _AkunState extends State<Akun> {
    
   void checkLogin() {
     if (user == null) {
-      // kalau tidak login, arahkan ke halaman Masuk
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, "/Masuk");
       });
       return;
     }
 
-    // Jika login, simpan userId dan load data
+   
     userId = user!.id;
     loadUserData();
   }
@@ -159,8 +159,6 @@ class _AkunState extends State<Akun> {
     logout();
   }
 }
-
-
 
 
  void loadUserData() async {
@@ -463,7 +461,7 @@ class _AkunState extends State<Akun> {
         ),
         child: Row(
           children: [
-            // ==== ICON KIRI (SVG) ====
+           
             if (leadingSvg != null) ...[
               SvgPicture.asset(
                 leadingSvg,
@@ -476,7 +474,7 @@ class _AkunState extends State<Akun> {
               const SizedBox(width: 12),
             ],
 
-            // ==== TEXT ====
+           
             Text(
               title,
               style: GoogleFonts.inter(
@@ -488,7 +486,7 @@ class _AkunState extends State<Akun> {
 
             const Spacer(),
 
-            // ==== ICON ARROW KANAN (SVG) ====
+           
             SvgPicture.asset(
               "assets/icons/arrow.svg",
               height: 16,

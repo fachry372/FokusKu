@@ -302,6 +302,102 @@ class Home extends StatelessWidget {
     );
   }
 
+ Future<bool> showMulaiPopup(BuildContext context) async {
+  final result = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: const Color(0xFFE6F2E6),
+        contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+
+        title: Center(
+          child: Text(
+            "Konfirmasi Mulai",
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 22, // ⬅ sama
+              color: const Color(0xFF182E19),
+            ),
+          ),
+        ),
+
+        content: Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 10),
+          child: Text(
+            "Apakah kamu yakin ingin mulai sesi fokus?",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 16, // ⬅ sama
+              color: const Color(0xFF4E574E),
+              height: 1.4,
+            ),
+          ),
+        ),
+
+        actionsPadding: const EdgeInsets.all(20),
+
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color.fromARGB(255, 100, 88, 88),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    "Batal",
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF52B755),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    "Mulai",
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+
+  return result ?? false;
+}
+
+
   @override
   Widget build(BuildContext context) {
     final timerService = Provider.of<TimerService>(context);
@@ -372,24 +468,26 @@ class Home extends StatelessWidget {
                 ),
                 const SizedBox(height: 25),
                 ElevatedButton(
-                   onPressed: () async {
-    await Izinnotif.showIfNeeded(context);
+                  onPressed: () async {
+                    final timerService = context.read<TimerService>();
 
-  
-   
-    await ForegroundService.stop();
-    Notif.cancelFocusNotification();
+                    final isConfirmed = await showMulaiPopup(context);
+                    if (!isConfirmed) return;
 
-    timerService.sesiFokusAktif = true;
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Sesifokus(timerService: timerService),
-      ),
-    );
-  },
+                    await Izinnotif.showIfNeeded(context);
 
+                    await ForegroundService.stop();
+                    Notif.cancelFocusNotification();
+
+                    timerService.sesiFokusAktif = true;
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => Sesifokus(timerService: timerService),
+                      ),
+                    );
+                  },
 
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xff52B755),

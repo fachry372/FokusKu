@@ -10,10 +10,8 @@ class TimerService extends ChangeNotifier {
 
   TimerService() : _remainingSeconds = 1500;
 
+  int _sessionId = 0;
   Timer? _timer;
-
-  DateTime? _endTime;
-  Timer? _ticker;
 
  
   int focusSeconds = 1500; 
@@ -107,6 +105,8 @@ bool sesiFokusAktif = false;
 
 
   void startPomodoro() {
+      if (sesiFokusAktif) return;
+
     sesiFokusAktif = true;
     step = 1;
     startNextStep();
@@ -115,6 +115,7 @@ bool sesiFokusAktif = false;
   
 
   void startNextStep() {
+     if (!sesiFokusAktif) return;
    
     if (step <= babak * 2 - 1) {
       if (step % 2 == 1) {
@@ -190,35 +191,53 @@ bool sesiFokusAktif = false;
 
 
 void start({required int seconds, VoidCallback? onFinished}) {
-  _endTime = DateTime.now().add(Duration(seconds: seconds));
-  _ticker?.cancel();
+  _timer?.cancel();
 
-  _ticker = Timer.periodic(const Duration(milliseconds: 500), (_) {
-  final diffMs = _endTime!.difference(DateTime.now()).inMilliseconds;
-  final diff = (diffMs / 1000).floor();
+  _sessionId++; 
+  final int currentSession = _sessionId;
 
-  if (diff > 0) {
-    _remainingSeconds = diff;
-    notifyListeners();
-  } else {
-    _remainingSeconds = 0;
-    _ticker?.cancel();
-    notifyListeners();
-    onFinished?.call();
-  }
-});
+  _remainingSeconds = seconds;
+  notifyListeners();
 
+  _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (currentSession != _sessionId || !sesiFokusAktif) {
+      timer.cancel();
+      return;
+    }
+
+    if (_remainingSeconds > 0) {
+      _remainingSeconds--;
+      notifyListeners();
+    } else {
+      timer.cancel();
+      onFinished?.call();
+    }
+  });
 }
-  void stop() {
-    _ticker?.cancel();
-    notifyListeners();
-  }
+
+
+ void stop() {
+  _timer?.cancel();
+  _timer = null;
+  notifyListeners();
+}
+
+
 
   void reset() {
-    stop();
-    _remainingSeconds = focusSeconds;
-    notifyListeners();
-  }
+  _sessionId++;
+  _timer?.cancel();
+  _timer = null;
+
+  step = 1;
+  isFocus = true;
+  sesiFokusAktif = false;
+  tunggureward = false;
+  _remainingSeconds = focusSeconds;
+
+  notifyListeners();
+}
+
 
   
   void updateTimers({
@@ -235,26 +254,34 @@ void start({required int seconds, VoidCallback? onFinished}) {
     reset();
   }
 
-void terminateSession() {
-  
-  _ticker?.cancel();
-  _timer?.cancel(); 
+  void _killSession() {
  
-  _remainingSeconds = focusSeconds;
+  _timer?.cancel();
+  _timer = null;
+
+  ForegroundService.stop();
+  Notif.cancelFocusNotification();
+}
 
 
-  step = 0;
+void terminateSession() {
+  _killSession();
+
   sesiFokusAktif = false;
   tunggureward = false;
+  isFocus = true;
+  step = 0;
 
+  _remainingSeconds = focusSeconds;
 
   notifyListeners();
 }
 
 
+
   @override
   void dispose() {
-    _ticker?.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 }
