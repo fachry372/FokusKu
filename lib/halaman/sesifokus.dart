@@ -322,7 +322,7 @@ void _onUserLeftApp() async {
               onPressed: () {
                 Navigator.pop(context);
                 timer.stop();
-
+                timer.reset();
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 }
