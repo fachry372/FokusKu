@@ -12,7 +12,7 @@ class TimerService extends ChangeNotifier {
 
   int _sessionId = 0;
   Timer? _timer;
-
+  DateTime? _endTime;
  
   int focusSeconds = 1500; 
   int breakSeconds = 300;  
@@ -192,12 +192,10 @@ bool sesiFokusAktif = false;
 
 void start({required int seconds, VoidCallback? onFinished}) {
   _timer?.cancel();
+  _sessionId++;
 
-  _sessionId++; 
   final int currentSession = _sessionId;
-
-  _remainingSeconds = seconds;
-  notifyListeners();
+  _endTime = DateTime.now().add(Duration(seconds: seconds));
 
   _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
     if (currentSession != _sessionId || !sesiFokusAktif) {
@@ -205,16 +203,21 @@ void start({required int seconds, VoidCallback? onFinished}) {
       return;
     }
 
-    if (_remainingSeconds > 0) {
-      _remainingSeconds--;
+    final remaining =
+    (_endTime!.difference(DateTime.now()).inMilliseconds / 1000).ceil();
+
+
+    if (remaining > 0) {
+      _remainingSeconds = remaining;
       notifyListeners();
     } else {
+      _remainingSeconds = 0;
+      notifyListeners();
       timer.cancel();
       onFinished?.call();
     }
   });
 }
-
 
  void stop() {
   _timer?.cancel();
