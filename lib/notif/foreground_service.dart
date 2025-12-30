@@ -58,7 +58,7 @@ class _EmptyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    // ✅ AMBIL DATA DENGAN KEY
+    
     final data = await FlutterForegroundTask.getData(key: 'seconds');
     remainingSeconds = (data as int?) ?? 0;
   }
@@ -76,7 +76,7 @@ class _EmptyTaskHandler extends TaskHandler {
         'finished': true,
       });
 
-      // ✅ otomatis stop service
+     
       FlutterForegroundTask.stopService();
     }
   }

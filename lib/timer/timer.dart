@@ -197,27 +197,32 @@ void start({required int seconds, VoidCallback? onFinished}) {
   final int currentSession = _sessionId;
   _endTime = DateTime.now().add(Duration(seconds: seconds));
 
-  _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+  _remainingSeconds = seconds; // tampilkan full time awal
+  notifyListeners();
+
+  // Tick lebih sering untuk akurasi
+  _timer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
     if (currentSession != _sessionId || !sesiFokusAktif) {
       timer.cancel();
       return;
     }
 
-    final remaining =
-    (_endTime!.difference(DateTime.now()).inMilliseconds / 1000).ceil();
+    final newRemaining = _endTime!.difference(DateTime.now()).inSeconds;
 
+    if (newRemaining != _remainingSeconds) {
+      _remainingSeconds = newRemaining.clamp(0, seconds);
+      notifyListeners();
+    }
 
-    if (remaining > 0) {
-      _remainingSeconds = remaining;
-      notifyListeners();
-    } else {
-      _remainingSeconds = 0;
-      notifyListeners();
+    if (_remainingSeconds <= 0) {
       timer.cancel();
       onFinished?.call();
     }
   });
 }
+
+
+
 
  void stop() {
   _timer?.cancel();
