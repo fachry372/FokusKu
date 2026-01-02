@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fokusku/notif/foreground_service.dart';
 import 'package:fokusku/notif/notif.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 
 
@@ -20,9 +21,9 @@ class TimerService extends ChangeNotifier {
   int babak = 4; 
   
 
-  // int focusSeconds = 20; 
-  // int breakSeconds = 20;  
-  // int longBreakSeconds = 20; 
+  // int focusSeconds = 60; 
+  // int breakSeconds = 60;  
+  // int longBreakSeconds = 60; 
   // int babak = 1; 
 
 
@@ -134,12 +135,16 @@ bool sesiFokusAktif = false;
   if (!sesiFokusAktif) return; 
   isFocus = true;
 
+  WakelockPlus.enable();
+
+
   ForegroundService.start(focusSeconds);
   Notif.showFocusNotification();
 
   start(
     seconds: focusSeconds,
     onFinished: () {
+      WakelockPlus.disable();
       step++;
       startNextStep();
     },
@@ -197,10 +202,9 @@ void start({required int seconds, VoidCallback? onFinished}) {
   final int currentSession = _sessionId;
   _endTime = DateTime.now().add(Duration(seconds: seconds));
 
-  _remainingSeconds = seconds; // tampilkan full time awal
+  _remainingSeconds = seconds; 
   notifyListeners();
 
-  // Tick lebih sering untuk akurasi
   _timer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
     if (currentSession != _sessionId || !sesiFokusAktif) {
       timer.cancel();
@@ -285,6 +289,19 @@ void terminateSession() {
   notifyListeners();
 }
 
+void forceReset() {
+  _sessionId++;
+  _timer?.cancel();
+  _timer = null;
+
+  step = 1;
+  isFocus = true;
+  tunggureward = false;
+  sesiFokusAktif = false; // ✅ WAJIB
+
+  _remainingSeconds = focusSeconds;
+  notifyListeners();
+}
 
 
   @override

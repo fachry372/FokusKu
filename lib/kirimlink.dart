@@ -37,35 +37,54 @@ class _KirimlinkState extends State<Kirimlink> {
   }
 
   void kirim() async {
-    if ((!mounted)) return;
+  if (!mounted) return;
 
-    setState(() => isLoading = true);
+  setState(() => isLoading = true);
+  final email = _emailController.text.trim();
 
-    final email = _emailController.text.trim();
+  try {
+    
+    final terdaftar = await authservice.cekEmailTerdaftar(email);
 
-    try {
-      await authservice.sendResetPasswordLink(email);
+    if (!terdaftar) {
       if (!mounted) return;
-      startCountdown(60);
 
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Link reset password berhasil dikirim! Cek email Anda.",
-          ),
+        const SnackBar(
+          content: Text("Email yang kamu masukkan tidak terdaftar"),
         ),
       );
-    } catch (e) {
-      if ((!mounted)) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Eror : $e")));
-    } finally {
+      return;
+    }
+
+    await authservice.sendResetPasswordLink(email);
+    if (!mounted) return;
+
+    startCountdown(60);
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Link reset password berhasil dikirim! Cek email Anda.",
+        ),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Terjadi kesalahan: $e")),
+    );
+  } finally {
+    if (mounted) {
       setState(() => isLoading = false);
     }
   }
+}
+
 
   @override
   void initState() {

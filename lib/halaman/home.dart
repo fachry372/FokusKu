@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:fokusku/notif/foreground_service.dart';
 import 'package:fokusku/notif/izinnotif.dart';
-import 'package:fokusku/notif/notif.dart';
 import 'package:provider/provider.dart';
 import 'package:fokusku/timer/timer.dart';
 import 'package:fokusku/halaman/sesifokus.dart';
 import 'package:fokusku/tamandantelur/tamantelur.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -471,15 +470,16 @@ class Home extends StatelessWidget {
                   onPressed: () async {
                     final timerService = context.read<TimerService>();
 
+                    
+                    final granted = await Izinnotif.request(context);
+                    if (!granted) return;
+
+
                     final isConfirmed = await showMulaiPopup(context);
                     if (!isConfirmed) return;
 
-                    await Izinnotif.showIfNeeded(context);
-
-                    await ForegroundService.stop();
-                    Notif.cancelFocusNotification();
-
-                    timerService.sesiFokusAktif = true;
+                   
+               
 
                     Navigator.push(
                       context,

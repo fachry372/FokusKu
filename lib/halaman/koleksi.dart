@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/auth/riwayatkoleksi.dart';
+import 'package:fokusku/halaman/koleksi/lihatsemua.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -15,6 +16,22 @@ class _KoleksiState extends State<Koleksi> {
 
   List<Map<String, dynamic>> koleksi = [];
   bool loadingKoleksi = true;
+
+  String formatTanggal(DateTime dt) {
+  return "${dt.day.toString().padLeft(2, '0')}-"
+         "${dt.month.toString().padLeft(2, '0')}-"
+         "${dt.year}";
+}
+
+String formatHari(DateTime dt) {
+  const hari = [
+    "Senin", "Selasa", "Rabu",
+    "Kamis", "Jumat", "Sabtu", "Minggu"
+  ];
+  return hari[dt.weekday - 1];
+}
+
+
 
   
   List<int> dailyHourMinutes = List.filled(24, 0); 
@@ -199,42 +216,73 @@ query = query
     return name;
   }
 
-  Widget _buildCollectionCard(double width, double height, Color primaryTextColor, Color cardBorderColor,
-      String rewardImage, String title) {
-    return Container(
-      height: 210,
-      width: width,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: cardBorderColor, width: 1),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          Image.asset(
-            'assets/images/$rewardImage',
-            width: 120,
-            height: 120,
-            fit: BoxFit.contain,
+ Widget _buildCollectionCard({
+  required double width,
+  required String rewardImage,
+  required DateTime createdAt,
+  required int jumlahSesi,
+}) {
+  return Container(
+    height: 210,
+    width: width,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: cardBorderColor, width: 1),
+    ),
+    child: Column(
+      children: [
+        const SizedBox(height: 10),
+
+        // 📅 TANGGAL
+        Text(
+          formatTanggal(createdAt),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: primaryTextColor,
           ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                color: primaryTextColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // 🐔 GAMBAR
+        Image.asset(
+          'assets/images/$rewardImage',
+          width: 110,
+          height: 110,
+          fit: BoxFit.contain,
+        ),
+
+        const SizedBox(height: 8),
+
+        // ⏱ JUMLAH SESI (TANPA FUTURE)
+        Text(
+          "$jumlahSesi sesi fokus",
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: primaryTextColor,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+
+        const SizedBox(height: 4),
+
+        // 📆 HARI
+        Text(
+          formatHari(createdAt),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
 
   Widget buildEmptyCard(double width, double height) {
     return Container(
@@ -649,8 +697,10 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
 }
 
 
-  // ------------------- Build entire screen -------------------
   bool isDailySelected = true;
+  List<Map<String, dynamic>> get latestKoleksi => koleksi.take(4).toList();
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -669,50 +719,87 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
               children: [
                 const SizedBox(height: 20),
 
-                Text(
-                  "Koleksi Saya",
-                  style: GoogleFonts.inter(color: primaryTextColor, fontSize: 24, fontWeight: FontWeight.w600),
-                ),
+    // JUDUL + TOMBOL (SEJAJAR)
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Koleksi Saya",
+          style: GoogleFonts.inter(
+            color: primaryTextColor,
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
 
-                const SizedBox(height: 2),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const Lihatsemua(),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Text(
+              "Lihat semua",
+              style: GoogleFonts.inter(
+                color: Color(0xff52B755),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
 
-                Text(
-                  "Lihat semua hewan yang sudah kamu kumpulkan.",
-                  style: GoogleFonts.inter(color: primaryTextColor, fontSize: 13, fontWeight: FontWeight.w400),
-                ),
+    const SizedBox(height: 6),
+
+    // DESKRIPSI (DI BAWAH JUDUL)
+    Text(
+      "Lihat semua hewan yang sudah kamu kumpulkan.",
+      style: GoogleFonts.inter(
+        color: primaryTextColor,
+        fontSize: 13,
+      ),
+    ),
 
                 const SizedBox(height: 15),
 
-              
-                Padding(
-                  padding: const EdgeInsets.only(right: 0),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: loadingKoleksi
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              color: accentColor,
-                            ),
-                          )
-                        : Row(
-                            children: koleksi.isEmpty
-                                ? [buildEmptyCard(cardWidth, cardHeight)]
-                                : koleksi.map((item) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: _buildCollectionCard(
-                                        cardWidth,
-                                        cardHeight,
-                                        primaryTextColor,
-                                        cardBorderColor,
-                                        item['reward_image'],
-                                        formatTitle(item['reward_image']),
-                                      ),
-                                    );
-                                  }).toList(),
-                          ),
-                  ),
-                ),
+
+Padding(
+  padding: const EdgeInsets.only(right: 0),
+  child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: loadingKoleksi
+        ? Center(
+            child: CircularProgressIndicator(
+              color: accentColor,
+            ),
+          )
+        : Row(
+            children: latestKoleksi.isEmpty
+                ? [buildEmptyCard(cardWidth, cardHeight)]
+                : latestKoleksi.map((item) {
+                   
+
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _buildCollectionCard(
+  width: cardWidth,
+  rewardImage: item['reward_image'],
+  createdAt: DateTime.parse(item['created_at']),
+  jumlahSesi: item['jumlah_sesi'],
+),
+                    );
+                  }).toList(),
+          ),
+  ),
+),
+
 
                 const SizedBox(height: 30),
 
@@ -734,8 +821,9 @@ final displayMax = maxVal < 75 ? 75.0 : maxVal.toDouble();
                         ? _buildDailyChart(screenWidth)
                         : _buildWeeklyChart(screenWidth),
 
-               
+      
               ],
+            
             ),
           ),
         ),

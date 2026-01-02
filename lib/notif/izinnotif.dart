@@ -1,50 +1,73 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Izinnotif {
-  static const _askedKey = 'notif_permission_asked';
+  /// Minta izin notifikasi (hanya Android 13+)
+  static Future<bool> request(BuildContext context) async {
+    // Hanya Android
+    if (!Platform.isAndroid) return true;
 
-  static Future<void> showIfNeeded(BuildContext context) async {
-    if (!Platform.isAndroid) return;
-
-    final prefs = await SharedPreferences.getInstance();
-
-    
-    final alreadyAsked = prefs.getBool(_askedKey) ?? false;
-    if (alreadyAsked) return;
-
+    // Cek SDK Android 13+ (permission POST_NOTIFICATIONS)
     final status = await Permission.notification.status;
 
-   
-    if (status.isGranted) {
-      await prefs.setBool(_askedKey, true);
-      return;
+    // Jika sudah diizinkan → langsung return true
+    if (status.isGranted) return true;
+
+    // Jika ditolak permanen (user pilih "Jangan tanya lagi")
+    if (status.isPermanentlyDenied) {
+      _showGoToSettings(context);
+      return false;
     }
 
-    
-    PermissionStatus result = status;
-    if (!status.isPermanentlyDenied) {
-      result = await Permission.notification.request();
-    }
+    // Request permission
+    final result = await Permission.notification.request();
 
-   
+    // Jika ditolak setelah request
     if (!result.isGranted) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Izin notifikasi ditolak. Untuk mengaktifkan nya silakan buka pengaturan.",
-            ),
-            
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
+      _showDeniedSnack(context);
+      return false;
     }
 
-   
-    await prefs.setBool(_askedKey, true);
+    return true;
+  }
+
+  // Tampilkan Snack untuk izin ditolak
+  static void _showDeniedSnack(BuildContext context) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Izin notifikasi ditolak. Sesuaikan di Pengaturan jika ingin mengaktifkannya.',
+        ),
+      ),
+    );
+  }
+
+  // Arahkan user ke Settings bila sudah permanently denied
+  static void _showGoToSettings(BuildContext context) {
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Izin Notifikasi Diperlukan'),
+        content: const Text(
+          'Agar notifikasi bekerja, buka Pengaturan aplikasi dan aktifkan izin notifikasi.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              openAppSettings();
+              Navigator.pop(context);
+            },
+            child: const Text('Buka Pengaturan'),
+          ),
+        ],
+      ),
+    );
   }
 }

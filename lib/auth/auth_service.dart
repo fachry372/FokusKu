@@ -37,6 +37,16 @@ class AuthService {
     return user?.email;
   }
 
+  
+ Future<bool> cekEmailTerdaftar(String email) async {
+    final res = await _supabase.rpc(
+      'cek_email_terdaftar',
+      params: {'p_email': email},
+    );
+
+    return res == true;
+  }
+
   Future<void> sendResetPasswordLink(String email) async {
   await _supabase.auth.resetPasswordForEmail(
     email,

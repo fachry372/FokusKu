@@ -7,6 +7,7 @@ class RewardService {
     required int menitFokus,
     required int faseAyam,
     required String rewardImage,
+    required int jumlahSesi, 
   }) async {
     try {
       final user = supabase.auth.currentUser;
@@ -17,6 +18,7 @@ class RewardService {
         'menit_fokus': menitFokus,
         'fase_ayam': faseAyam,
         'reward_image': rewardImage,
+        'jumlah_sesi': jumlahSesi,
       });
 
       return true;
@@ -25,18 +27,20 @@ class RewardService {
       return false;
     }
   }
-  static Future<List<Map<String, dynamic>>> getKoleksi() async {
+
+static Future<List<Map<String, dynamic>>> getKoleksi() async {
   final user = supabase.auth.currentUser;
   if (user == null) return [];
 
-  final response = await supabase
+  final data = await supabase
       .from('koleksi')
-      .select()
+      .select('id, reward_image, created_at, jumlah_sesi')
       .eq('user_id', user.id)
       .order('created_at', ascending: false);
 
-  return response;
+  return List<Map<String, dynamic>>.from(data);
 }
+
 
 }
 
