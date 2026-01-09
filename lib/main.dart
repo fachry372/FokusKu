@@ -14,7 +14,7 @@ import 'package:fokusku/timer/timer.dart';
 import 'login.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +34,11 @@ void main() async {
         ),
       );
     }
-  });
+
+    
+  }
+  
+  );
 
   initAppLinks();
 
@@ -51,19 +55,40 @@ void main() async {
 }
 
 void initAppLinks() {
-  AppLinks().uriLinkStream.listen((uri) {
-    if (uri.host == "login") {
+  final appLinks = AppLinks();
+
+  appLinks.uriLinkStream.listen((uri) {
+    if (uri == null) return;
+
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) return;
+
+    if (uri.host == 'auth-callback') {
       navigatorKey.currentState?.pushNamedAndRemoveUntil('/Masuk', (_) => false);
 
-      final ctx = navigatorKey.currentContext;
-      if (ctx != null) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text("Email berhasil diperbarui!")),
-        );
-      }
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text("Email berhasil diverifikasi. Silakan login."),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
+
+    if (uri.host == 'login') {
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/Masuk', (_) => false);
+
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Email berhasil diperbarui! Untuk menyelesaikan, pastikan Anda juga mengklik link verifikasi dikedua email.",
+          ),
+          duration: Duration(seconds: 5),
+        ),
+      );
     }
   });
 }
+
 
 
 
@@ -83,6 +108,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
+      scaffoldMessengerKey: scaffoldMessengerKey,
       debugShowCheckedModeBanner: false,
       routes: {
         '/Daftar': (context) => Register(),

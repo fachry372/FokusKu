@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fokusku/notif/foreground_service.dart';
 import 'package:fokusku/notif/notif.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 
 
@@ -135,16 +134,12 @@ bool sesiFokusAktif = false;
   if (!sesiFokusAktif) return; 
   isFocus = true;
 
-  WakelockPlus.enable();
-
-
   ForegroundService.start(focusSeconds);
   Notif.showFocusNotification();
 
   start(
     seconds: focusSeconds,
     onFinished: () {
-      WakelockPlus.disable();
       step++;
       startNextStep();
     },

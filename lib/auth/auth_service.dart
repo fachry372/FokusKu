@@ -2,29 +2,60 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  
+Future<AuthResponse> signInWithEmailPassword(
+    String email,
+    String password,
+) async {
+  final response = await _supabase.auth
+      .signInWithPassword(email: email, password: password);
 
-  Future<AuthResponse> signInWithEmailPassword(String email, String password) async {
-    return await _supabase.auth.signInWithPassword(email: email,password: password,);
+  final user = response.user;
+
+  if (user != null && user.emailConfirmedAt == null) {
+    throw Exception("Email belum diverifikasi");
   }
 
-   Future<AuthResponse> signUpWithEmailPassword(String name, String email, String password) async {
+  return response;
+}
 
-    final response = await _supabase.auth.signUp(email: email ,password: password);
-    final user = response.user;
+Future<void> signUpWithEmailPassword(
+  String name,
+  String email,
+  String password,
+) async {
+  await _supabase.auth.signUp(
+    email: email,
+    password: password,
+    emailRedirectTo: 'fokusku://auth-callback',
+    data: {
+      'nama': name, // simpan di metadata dulu
+    },
+  );
+}
 
-    if (user == null) {
-      throw Exception("Gagal membuat akun");
-    }
+Future<void> ensureUserProfile() async {
+  final user = _supabase.auth.currentUser;
+  if (user == null) return;
 
+  if (user.emailConfirmedAt == null) {
+    throw Exception("Email belum diverifikasi");
+  }
+
+  final exists = await _supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+  if (exists == null) {
     await _supabase.from('users').insert({
       'id': user.id,
-      'nama': name,
-      'email': email,
+      'nama': user.userMetadata?['nama'],
+      'email': user.email,
     });
-
-    return response;
-    
   }
+}
 
 
   Future<void> signOut() async {

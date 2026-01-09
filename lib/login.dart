@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fokusku/auth/auth_service.dart';
+import 'package:fokusku/main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
 
@@ -21,52 +22,64 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
 
   void login() async {
+  if (!mounted) return;
+
+  setState(() => isLoading = true);
+
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
+
+  try {
+    // 1️⃣ LOGIN
+    await authservice.signInWithEmailPassword(email, password);
+
+    // 2️⃣ PASTIKAN USER SUDAH VERIFIKASI & ADA DI public.users
+    await authservice.ensureUserProfile();
+
     if (!mounted) return;
 
-    setState(() => isLoading = true);
+    
+   scaffoldMessengerKey.currentState?.clearSnackBars();
+scaffoldMessengerKey.currentState?.showSnackBar(
+  const SnackBar(
+    content: Text("Login berhasil."),
+   
+    duration: Duration(seconds: 2),
+  ),
+);
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
 
-    try {
-      await authservice.signInWithEmailPassword(email, password);
+    // ⏳ BERI JEDA AGAR SNACKBAR TERLIHAT
+    await Future.delayed(const Duration(milliseconds: 800));
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Login berhasil!"),
+    Navigator.pushReplacementNamed(context, "/home");
 
-          duration: Duration(seconds: 1),
-        ),
-      );
+  } catch (e) {
+    if (!mounted) return;
 
-      // await Future.delayed(Duration(milliseconds: 800));
+    String errorMessage;
 
-      Navigator.pushReplacementNamed(context, "/home");
-    } catch (e) {
-      if (!mounted) return;
+    if (e.toString().contains("Email belum diverifikasi")) {
+      errorMessage =
+          "Email belum diverifikasi. Silakan cek email kamu terlebih dahulu.";
+    } else if (e.toString().contains("Invalid login credentials")) {
+      errorMessage = "Login gagal, email atau kata sandi salah.";
+    } else {
+      errorMessage = "Terjadi kesalahan : $e ";
+    }
 
-      String errorMessage;
-
-      if (e.toString().contains("Invalid login credentials")) {
-        errorMessage = "Login gagal, email atau kata sandi salah.";
-      } else {
-        errorMessage = "Terjadi kesalahan: $e";
-      }
-
-      ScaffoldMessenger.of(context).clearSnackBars();
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(errorMessage)));
+  } finally {
+    if (mounted) {
+      setState(() => isLoading = false);
     }
   }
+}
+
 
   bool isenabled = false;
 
@@ -339,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              Navigator.pushReplacementNamed(
+                              Navigator.pushNamed(
                                 context,
                                 "/Daftar",
                               );

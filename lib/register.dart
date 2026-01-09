@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth/auth_service.dart';
 
 
@@ -25,54 +26,79 @@ class _RegisterScreenState extends State<Register> {
  
 
     void signUp() async {
-      if (!mounted) return;
+  if (!mounted) return;
 
-      setState(() =>  isLoading = true);
+  final name = _nameController.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text;
+  final konfirmasi = _konfirmasipasswordController.text;
 
-    final name = _nameController.text;
-    final email = _emailController.text;
-    final password = _passwordController.text;
-    final konfirmasi = _konfirmasipasswordController.text;
+  if (password != konfirmasi) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Kata sandi tidak cocok!")),
+    );
+    return;
+  }
 
-    if (password != konfirmasi) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Kata sandi tidak cocok!")));
+  setState(() => isLoading = true);
+
+  try {
+    // ✅ CEK EMAIL SUDAH TERDAFTAR ATAU BELUM
+    final sudahTerdaftar = await authservice.cekEmailTerdaftar(email);
+
+    if (sudahTerdaftar) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email sudah terdaftar")),
+      );
       return;
     }
 
-    try {
-      await  authservice.signUpWithEmailPassword(name,email, password,);
+    // ✅ JIKA BELUM → LANJUT DAFTAR
+    await authservice.signUpWithEmailPassword(
+      name,
+      email,
+      password,
+    );
 
-       if (!mounted) return;
+    if (!mounted) return;
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Pendaftaran berhasil. Silakan cek email untuk verifikasi akun.",
+        ),
+      ),
+    );
+
+    Navigator.pushReplacementNamed(context, "/Masuk");
+ } catch (e) {
+  if (!mounted) return;
+
+  String? errorMessage; 
+
+  if (e is AuthException) {
+    final msg = e.message.toLowerCase();
+
+    if (msg.contains("email") && msg.contains("invalid")) {
+      errorMessage = "Email yang kamu masukkan tidak valid.";
+    }
     
-    Navigator.pushReplacementNamed(context, "/home");
-    } 
-
-    catch (e) {
-      if (!mounted) return;
-
-       String errorMessage;
-
-  if (e.toString().contains("User already registered")) {
-    errorMessage = "Pendaftaran gagal ,Akun sudah ada.";
-  } else  if (e.toString().contains("Unable to validate email address")) {
-    errorMessage = "Format Email tidak valid .";
-  }
-  else {
-    errorMessage = "Terjadi kesalahan: $e";
   }
 
-        ScaffoldMessenger.of(context).clearSnackBars();
+ 
+  errorMessage ??= "Terjadi kesalahan : $e";
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text (errorMessage),));
-       
-    }finally{
-      if (mounted) {
-        setState(() => isLoading = false);
-      } 
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(errorMessage)),
+  );
+}
+finally {
+    if (mounted) {
+      setState(() => isLoading = false);
     }
   }
-  
+}
+
   bool isLoading = false;
   bool isenabled = false;
 
